@@ -8,7 +8,10 @@ import {
 
 import "./TuringNodeStyles.css";
 
-export type TuringNode = Node<{ isStart: boolean; isFinal: boolean }, "turing">;
+export type TuringNode = Node<
+  { isStart: boolean; isFinal: boolean; isActive: boolean },
+  "turing"
+>;
 
 export function TuringNode({ id, data }: NodeProps<TuringNode>) {
   const connection = useConnection();
@@ -24,6 +27,7 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
             : data.isStart
             ? "lightseagreen"
             : "lightskyblue",
+          border: data.isActive ? "4px solid lightpink" : "none",
         }}
       >
         {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}

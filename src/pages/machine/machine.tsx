@@ -1,4 +1,9 @@
-import { ChevronUpIcon, PlayIcon, PlusIcon } from "@radix-ui/react-icons";
+import {
+  ChevronUpIcon,
+  PlayIcon,
+  PlusIcon,
+  ResetIcon,
+} from "@radix-ui/react-icons";
 import { useState, useCallback, useMemo, ChangeEvent } from "react";
 
 import {
@@ -25,6 +30,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TuringEdge } from "./TuringEdge";
 
+const INTERVAL = 500;
+
 const fitViewOptions: FitViewOptions = {
   padding: 0.2,
 };
@@ -45,19 +52,19 @@ const initialNodes: Node[] = [
   {
     id: "1",
     type: "turing",
-    data: { isStart: true, isFinal: false },
+    data: { isStart: true, isFinal: false, isActive: false },
     position: { x: 0, y: 0 },
   },
   {
     id: "2",
     type: "turing",
-    data: { isStart: false, isFinal: false },
+    data: { isStart: false, isFinal: false, isActive: false },
     position: { x: 100, y: 0 },
   },
   {
     id: "3",
     type: "turing",
-    data: { isStart: false, isFinal: true },
+    data: { isStart: false, isFinal: true, isActive: false },
     position: { x: 200, y: 0 },
   },
 ];
@@ -83,6 +90,9 @@ export default function TuringMachine() {
   const [activeTool, setActiveTool] = useState<string>("");
   const [tape, setTape] = useState<string[]>(new Array(50).fill("_"));
   const [tapeHead, setTapeHead] = useState<number>(0);
+  const [activeNodeId, setActiveNodeId] = useState<string | undefined>(
+    undefined
+  );
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const { theme } = useTheme();
@@ -122,7 +132,7 @@ export default function TuringMachine() {
     setNodes(newNodesArray);
   }, [nodes]);
 
-  const playTape = () => {
+  const playTape = async () => {
     const startStates = nodes.filter((node) => node.data.isStart);
 
     if (startStates.length != 1) {
@@ -195,45 +205,59 @@ export default function TuringMachine() {
     });
 
     let currentNode = startStates[0];
+    setActiveNodeId(currentNode.id);
     let tapeIdx = tapeHead;
+    let updatedTape = [...tape]; // Work with a local copy of tape
+
+    const updateTapeHeadActive = async (
+      newTape: string[],
+      newTapeHead: number,
+      active: string
+    ) => {
+      return new Promise((resolve) => {
+        setTape(newTape);
+        setTapeHead(newTapeHead);
+        setActiveNodeId(active);
+        setTimeout(resolve, INTERVAL);
+      });
+    };
+
     while (!currentNode.data.isFinal) {
-      const tapeLetter = tape[tapeIdx];
+      const tapeLetter = updatedTape[tapeIdx];
       const nodeRecords = edgesToNodesRecord[currentNode.id];
       const edge = nodeRecords.find(
         ({ readLetter }) => readLetter == tapeLetter
       );
+
       if (!edge) {
         console.error("Couldn't find current symbol leaving this node");
         return;
       }
 
+      // Update the tape symbol if needed
       if (edge.writeLetter) {
-        setTape((currentTape) => {
-          const updatedTape = [...currentTape];
-          console.log(updatedTape);
-          updatedTape[tapeIdx] = edge.writeLetter as string;
-          return updatedTape;
-        });
+        updatedTape[tapeIdx] = edge.writeLetter; // Modify the local copy of tape
       }
 
+      // Update tape head based on direction
       if (edge.direction == "<") {
-        if (tapeHead == 0) {
+        if (tapeIdx == 0) {
           console.error(
             "Can't move left from leftmost symbol. You fell off the tape!"
           );
           return;
         }
-        setTapeHead((currVal) => currVal - 1);
-        tapeIdx = tapeIdx - 1;
+        tapeIdx = tapeIdx - 1; // Update tape index locally
       } else if (edge.direction == ">") {
-        setTapeHead((currVal) => currVal + 1);
-        tapeIdx = tapeIdx + 1;
+        tapeIdx = tapeIdx + 1; // Update tape index locally
       }
+
+      // Await the update of tape and tape head for visual feedback
+      await updateTapeHeadActive(updatedTape, tapeIdx, edge.node.id);
+
+      // Move to the next node in the machine
       currentNode = edge.node;
     }
-
-    setTapeHead(0);
-    console.log("Got to a final state!");
   };
 
   const handleSymbolClick = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -274,10 +298,27 @@ export default function TuringMachine() {
           >
             <PlayIcon className="w-12 h-12" />
           </ToolButton>
+          <ToolButton
+            name="resetTapeHead"
+            onClick={() => {
+              setTapeHead(0);
+              const startStates = nodes.filter((node) => node.data.isStart);
+              if (startStates.length == 1) {
+                setActiveNodeId(startStates[0].id);
+              }
+            }}
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+          >
+            <ResetIcon className="w-12 h-12" />
+          </ToolButton>
         </div>
         <div className="h-full">
           <ReactFlow
-            nodes={nodes}
+            nodes={nodes.map((node) => ({
+              ...node,
+              data: { ...node.data, isActive: activeNodeId == node.id },
+            }))}
             nodeTypes={nodeTypes}
             edges={edges}
             edgeTypes={edgeTypes}
