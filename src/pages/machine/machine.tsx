@@ -1,5 +1,6 @@
 import {
   ChevronUpIcon,
+  DownloadIcon,
   PlayIcon,
   PlusIcon,
   ResetIcon,
@@ -86,6 +87,74 @@ const initialEdges: Edge[] = [
   },
 ];
 
+const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
+  const edgesToNodesRecord: {
+    [id: string]: {
+      readLetter: string;
+      writeLetter: string | undefined;
+      direction: string;
+      node: Node;
+    }[];
+  } = {};
+
+  edges.forEach((edge) => {
+    const withoutE = edge.id.slice(1);
+    const ids = withoutE.split("-");
+    const sourceId = ids[0];
+    const targetId = ids[1];
+    const edgeValue = edge!.data!.edgeValue as string;
+    const edgeValueSplit = edgeValue.split(",");
+
+    let newReadLetter = undefined;
+    let newWriteLetter = undefined;
+    let newDirection = undefined;
+    if (edgeValueSplit.length == 2) {
+      newReadLetter = edgeValueSplit[0];
+      newDirection = edgeValueSplit[1];
+    } else if (edgeValueSplit.length == 3) {
+      newReadLetter = edgeValueSplit[0];
+      newWriteLetter = edgeValueSplit[1];
+      newDirection = edgeValueSplit[2];
+    } else {
+      console.error("Each edge must have either 2 or 3 values");
+      return;
+    }
+
+    const currArr = edgesToNodesRecord[sourceId];
+    if (currArr) {
+      const isLetterPresent =
+        currArr.filter(({ readLetter }) => readLetter == newReadLetter).length >
+        0;
+      if (isLetterPresent) {
+        console.error(
+          "Each node must have only one of each letter outgoing max"
+        );
+        return;
+      }
+      edgesToNodesRecord[sourceId] = [
+        ...currArr,
+        {
+          readLetter: newReadLetter,
+          writeLetter: newWriteLetter,
+          direction: newDirection,
+          node: nodes.filter((node) => node.id == targetId)[0],
+        },
+      ];
+    } else {
+      edgesToNodesRecord[sourceId] = [
+        {
+          readLetter: newReadLetter,
+          writeLetter: newWriteLetter,
+          direction: newDirection,
+          node: nodes.filter((node) => node.id == targetId)[0],
+        },
+      ];
+    }
+  });
+
+  return edgesToNodesRecord;
+};
+
 export default function TuringMachine() {
   const [activeTool, setActiveTool] = useState<string>("");
   const [tape, setTape] = useState<string[]>(new Array(50).fill("_"));
@@ -133,6 +202,18 @@ export default function TuringMachine() {
     setNodes(newNodesArray);
   }, [nodes]);
 
+  const saveMachine = () => {
+    const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+      JSON.stringify(edgesToNodesRecord)
+    )}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    link.download = "data.json";
+    link.click();
+    link.remove();
+  };
+
   const playTape = async () => {
     const startStates = nodes.filter((node) => node.data.isStart);
 
@@ -141,69 +222,7 @@ export default function TuringMachine() {
       return;
     }
 
-    // create the edge to node object
-    const edgesToNodesRecord: {
-      [id: string]: {
-        readLetter: string;
-        writeLetter: string | undefined;
-        direction: string;
-        node: Node;
-      }[];
-    } = {};
-    edges.forEach((edge) => {
-      const withoutE = edge.id.slice(1);
-      const ids = withoutE.split("-");
-      const sourceId = ids[0];
-      const targetId = ids[1];
-      const edgeValue = edge!.data!.edgeValue as string;
-      const edgeValueSplit = edgeValue.split(",");
-
-      let newReadLetter = undefined;
-      let newWriteLetter = undefined;
-      let newDirection = undefined;
-      if (edgeValueSplit.length == 2) {
-        newReadLetter = edgeValueSplit[0];
-        newDirection = edgeValueSplit[1];
-      } else if (edgeValueSplit.length == 3) {
-        newReadLetter = edgeValueSplit[0];
-        newWriteLetter = edgeValueSplit[1];
-        newDirection = edgeValueSplit[2];
-      } else {
-        console.error("Each edge must have either 2 or 3 values");
-        return;
-      }
-
-      const currArr = edgesToNodesRecord[sourceId];
-      if (currArr) {
-        const isLetterPresent =
-          currArr.filter(({ readLetter }) => readLetter == newReadLetter)
-            .length > 0;
-        if (isLetterPresent) {
-          console.error(
-            "Each node must have only one of each letter outgoing max"
-          );
-          return;
-        }
-        edgesToNodesRecord[sourceId] = [
-          ...currArr,
-          {
-            readLetter: newReadLetter,
-            writeLetter: newWriteLetter,
-            direction: newDirection,
-            node: nodes.filter((node) => node.id == targetId)[0],
-          },
-        ];
-      } else {
-        edgesToNodesRecord[sourceId] = [
-          {
-            readLetter: newReadLetter,
-            writeLetter: newWriteLetter,
-            direction: newDirection,
-            node: nodes.filter((node) => node.id == targetId)[0],
-          },
-        ];
-      }
-    });
+    const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
 
     let currentNode = startStates[0];
     setActiveNodeId(currentNode.id);
@@ -316,7 +335,7 @@ export default function TuringMachine() {
           <ToolButton
             name="changeSpeed"
             onClick={() => {
-              if (speed == 0) {
+              if (speed == 20) {
                 setSpeed(100);
               } else {
                 setSpeed(speed - 20);
@@ -326,6 +345,14 @@ export default function TuringMachine() {
             setActiveTool={setActiveTool}
           >
             <span>{speed}%</span>
+          </ToolButton>
+          <ToolButton
+            name="saveMachine"
+            onClick={saveMachine}
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+          >
+            <DownloadIcon className="w-12 h-12" />
           </ToolButton>
         </div>
         <div className="h-full">
