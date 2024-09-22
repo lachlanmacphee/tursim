@@ -10,7 +10,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  addEdge,
   applyNodeChanges,
   applyEdgeChanges,
   type Node,
@@ -29,8 +28,9 @@ import { TuringNode } from "./TuringNode";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TuringEdge } from "./TuringEdge";
+import { customAddEdge } from "@/lib/utils";
 
-const INTERVAL = 500;
+const BASE_INTERVAL = 500;
 
 const fitViewOptions: FitViewOptions = {
   padding: 0.2,
@@ -95,6 +95,7 @@ export default function TuringMachine() {
   );
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  const [speed, setSpeed] = useState<number>(100);
   const { theme } = useTheme();
   const colorMode = useMemo(
     () => (theme == "system" ? "system" : theme == "light" ? "light" : "dark"),
@@ -110,7 +111,7 @@ export default function TuringMachine() {
     [setEdges]
   );
   const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    (connection) => setEdges((eds) => customAddEdge(connection, eds)),
     [setEdges]
   );
 
@@ -218,7 +219,7 @@ export default function TuringMachine() {
         setTape(newTape);
         setTapeHead(newTapeHead);
         setActiveNodeId(active);
-        setTimeout(resolve, INTERVAL);
+        setTimeout(resolve, BASE_INTERVAL / (speed / 100));
       });
     };
 
@@ -311,6 +312,20 @@ export default function TuringMachine() {
             setActiveTool={setActiveTool}
           >
             <ResetIcon className="w-12 h-12" />
+          </ToolButton>
+          <ToolButton
+            name="changeSpeed"
+            onClick={() => {
+              if (speed == 0) {
+                setSpeed(100);
+              } else {
+                setSpeed(speed - 20);
+              }
+            }}
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+          >
+            <span>{speed}%</span>
           </ToolButton>
         </div>
         <div className="h-full">

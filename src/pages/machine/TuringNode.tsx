@@ -30,8 +30,6 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
           border: data.isActive ? "4px solid lightpink" : "none",
         }}
       >
-        {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}
-        {/* In this case we don't need to use useUpdateNodeInternals, since !isConnecting is true at the beginning and all handles are rendered initially. */}
         {!connection.inProgress && (
           <Handle
             className="customHandle"
@@ -48,9 +46,7 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
             isConnectableStart={false}
           />
         )}
-        {/* <span>isStart: {data.isStart}</span> */}
         <span className="text-white">{id}</span>
-        {/* <span>isFinal: {data.isFinal}</span> */}
       </div>
     </div>
   );
