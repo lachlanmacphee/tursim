@@ -9,8 +9,10 @@ import { useState } from "react";
 
 export function TuringEdge({
   id,
+  source,
   sourceX,
   sourceY,
+  target,
   targetX,
   targetY,
   sourcePosition,
@@ -19,7 +21,7 @@ export function TuringEdge({
   markerEnd,
   data,
 }: EdgeProps) {
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const [bezierEdgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -42,14 +44,26 @@ export function TuringEdge({
     });
   };
 
+  const radiusX = (sourceX - targetX) * 0.6;
+  const radiusY = 50;
+  const selfConnectingEdgePath = `M ${
+    sourceX - 5
+  } ${sourceY} A ${radiusX} ${radiusY} 0 1 0 ${targetX + 2} ${targetY}`;
+
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge
+        path={source == target ? selfConnectingEdgePath : bezierEdgePath}
+        markerEnd={markerEnd}
+        style={style}
+      />
       <EdgeLabelRenderer>
         <div
           style={{
             position: "absolute",
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            transform: `translate(-50%, ${
+              source == target ? "-300%" : "-50%"
+            }) translate(${labelX}px,${labelY}px)`,
             // if you have an interactive element, set pointer-events: all
             pointerEvents: "all",
           }}

@@ -37,15 +37,12 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
             type="source"
           />
         )}
-        {/* We want to disable the target handle, if the connection was started from this node */}
-        {(!connection.inProgress || isTarget) && (
-          <Handle
-            className="customHandle"
-            position={Position.Left}
-            type="target"
-            isConnectableStart={false}
-          />
-        )}
+        <Handle
+          className="customHandle"
+          position={Position.Left}
+          type="target"
+          isConnectableStart={false}
+        />
         <span className="text-white">{id}</span>
       </div>
     </div>

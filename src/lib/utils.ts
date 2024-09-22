@@ -7,13 +7,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const getEdgeId = ({
-  source,
-  sourceHandle,
-  target,
-  targetHandle,
-}: Connection | EdgeBase): string =>
-  `e${source}${sourceHandle || ""}-${target}${targetHandle || ""}`;
+const getEdgeId = ({ source, target }: Connection | EdgeBase): string =>
+  `e${source}-${target}`;
+
+const connectionExists = (edge: EdgeBase, edges: EdgeBase[]) => {
+  return edges.some(
+    (el) => el.source === edge.source && el.target === edge.target
+  );
+};
 
 export const customAddEdge = <EdgeType extends EdgeBase>(
   edgeParams: EdgeType | Connection,
@@ -40,6 +41,10 @@ export const customAddEdge = <EdgeType extends EdgeBase>(
       // @ts-ignore
       data: { ...edgeParams.data, edgeValue: "_,_,>" },
     } as EdgeType;
+  }
+
+  if (connectionExists(edge, edges)) {
+    return edges;
   }
 
   if (edge.sourceHandle === null) {
