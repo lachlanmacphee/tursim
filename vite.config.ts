@@ -2,13 +2,9 @@ import path from "path"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
-const basenameProd = '/react-shadcn-starter'
-
-export default defineConfig(({ command }) => {
-  const isProd = command === 'build'
-
+export default defineConfig(() => {
   return {
-    base: isProd ? basenameProd : '',
+    base: "",
     plugins: [react()],
     resolve: {
       alias: {
@@ -17,8 +13,8 @@ export default defineConfig(({ command }) => {
     },
     define: {
       global: {
-        basename: isProd ? basenameProd : '',
+        basename: "",
       },
     },
-  }
-})
+  };
+});
