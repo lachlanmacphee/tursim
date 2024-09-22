@@ -54,13 +54,13 @@ const initialNodes: Node[] = [
     id: "1",
     type: "turing",
     data: { isStart: true, isFinal: false, isActive: false },
-    position: { x: 0, y: 0 },
+    position: { x: -200, y: 0 },
   },
   {
     id: "2",
     type: "turing",
     data: { isStart: false, isFinal: false, isActive: false },
-    position: { x: 100, y: 0 },
+    position: { x: 0, y: 0 },
   },
   {
     id: "3",
@@ -98,10 +98,8 @@ const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
   } = {};
 
   edges.forEach((edge) => {
-    const withoutE = edge.id.slice(1);
-    const ids = withoutE.split("-");
-    const sourceId = ids[0];
-    const targetId = ids[1];
+    const sourceId = edge.source;
+    const targetId = edge.target;
     const edgeValue = edge!.data!.edgeValue as string;
     const edgeValueSplit = edgeValue.split(",");
 
