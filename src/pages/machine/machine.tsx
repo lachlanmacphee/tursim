@@ -105,9 +105,9 @@ const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
     const edgeValue = edge!.data!.edgeValue as string;
     const edgeValueSplit = edgeValue.split(",");
 
-    let newReadLetter = undefined;
-    let newWriteLetter = undefined;
-    let newDirection = undefined;
+    let newReadLetter: string | undefined = undefined;
+    let newWriteLetter: string | undefined = undefined;
+    let newDirection: string | undefined = undefined;
     if (edgeValueSplit.length == 2) {
       newReadLetter = edgeValueSplit[0];
       newDirection = edgeValueSplit[1];
