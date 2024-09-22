@@ -101,53 +101,57 @@ const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
     const sourceId = edge.source;
     const targetId = edge.target;
     const edgeValue = edge!.data!.edgeValue as string;
-    const edgeValueSplit = edgeValue.split(",");
+    const connections = edgeValue.split(";");
 
-    let newReadLetter: string | undefined = undefined;
-    let newWriteLetter: string | undefined = undefined;
-    let newDirection: string | undefined = undefined;
-    if (edgeValueSplit.length == 2) {
-      newReadLetter = edgeValueSplit[0];
-      newDirection = edgeValueSplit[1];
-    } else if (edgeValueSplit.length == 3) {
-      newReadLetter = edgeValueSplit[0];
-      newWriteLetter = edgeValueSplit[1];
-      newDirection = edgeValueSplit[2];
-    } else {
-      console.error("Each edge must have either 2 or 3 values");
-      return;
-    }
+    connections.forEach((connection) => {
+      const edgeValueSplit = connection.split(",");
 
-    const currArr = edgesToNodesRecord[sourceId];
-    if (currArr) {
-      const isLetterPresent =
-        currArr.filter(({ readLetter }) => readLetter == newReadLetter).length >
-        0;
-      if (isLetterPresent) {
-        console.error(
-          "Each node must have only one of each letter outgoing max"
-        );
+      let newReadLetter: string | undefined = undefined;
+      let newWriteLetter: string | undefined = undefined;
+      let newDirection: string | undefined = undefined;
+      if (edgeValueSplit.length == 2) {
+        newReadLetter = edgeValueSplit[0];
+        newDirection = edgeValueSplit[1];
+      } else if (edgeValueSplit.length == 3) {
+        newReadLetter = edgeValueSplit[0];
+        newWriteLetter = edgeValueSplit[1];
+        newDirection = edgeValueSplit[2];
+      } else {
+        console.error("Each edge must have either 2 or 3 values");
         return;
       }
-      edgesToNodesRecord[sourceId] = [
-        ...currArr,
-        {
-          readLetter: newReadLetter,
-          writeLetter: newWriteLetter,
-          direction: newDirection,
-          node: nodes.filter((node) => node.id == targetId)[0],
-        },
-      ];
-    } else {
-      edgesToNodesRecord[sourceId] = [
-        {
-          readLetter: newReadLetter,
-          writeLetter: newWriteLetter,
-          direction: newDirection,
-          node: nodes.filter((node) => node.id == targetId)[0],
-        },
-      ];
-    }
+
+      const currArr = edgesToNodesRecord[sourceId];
+      if (currArr) {
+        const isLetterPresent =
+          currArr.filter(({ readLetter }) => readLetter == newReadLetter)
+            .length > 0;
+        if (isLetterPresent) {
+          console.error(
+            "Each node must have only one of each letter outgoing max"
+          );
+          return;
+        }
+        edgesToNodesRecord[sourceId] = [
+          ...currArr,
+          {
+            readLetter: newReadLetter,
+            writeLetter: newWriteLetter,
+            direction: newDirection,
+            node: nodes.filter((node) => node.id == targetId)[0],
+          },
+        ];
+      } else {
+        edgesToNodesRecord[sourceId] = [
+          {
+            readLetter: newReadLetter,
+            writeLetter: newWriteLetter,
+            direction: newDirection,
+            node: nodes.filter((node) => node.id == targetId)[0],
+          },
+        ];
+      }
+    });
   });
 
   return edgesToNodesRecord;
@@ -196,7 +200,6 @@ export default function TuringMachine() {
       position: { x: 5, y: 100 },
     };
     const newNodesArray = [...nodes, newNode];
-    console.log(newNodesArray);
     setNodes(newNodesArray);
   }, [nodes]);
 

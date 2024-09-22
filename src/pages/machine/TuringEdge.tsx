@@ -5,7 +5,42 @@ import {
   getBezierPath,
   useReactFlow,
 } from "@xyflow/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const EditableDiv = ({
+  edgeValue,
+  onChangeHandler,
+}: {
+  edgeValue: string;
+  onChangeHandler: (value: string) => void;
+}) => {
+  const contentEditableRef = useRef(null);
+
+  useEffect(() => {
+    // Set the content of the div when edgeValue changes
+    if (contentEditableRef.current) {
+      // @ts-ignore
+      contentEditableRef.current.textContent = edgeValue;
+    }
+  }, [edgeValue]);
+
+  const handleInput = () => {
+    if (contentEditableRef.current) {
+      // Update value in parent component when content changes
+      // @ts-ignore
+      onChangeHandler(contentEditableRef.current.textContent);
+    }
+  };
+
+  return (
+    <div
+      contentEditable="plaintext-only"
+      ref={contentEditableRef}
+      className="min-w-14 px-2 bg-white border rounded-sm text-center text-lg overflow-auto cursor-text"
+      onInput={handleInput}
+    />
+  );
+};
 
 export function TuringEdge({
   id,
@@ -39,7 +74,6 @@ export function TuringEdge({
       const edgeToAddBack = edges.filter((edge) => edge.id === id)[0];
       edgeToAddBack.data = { ...edgeToAddBack.data, edgeValue: value };
       const newEdges = [...filteredEdges, edgeToAddBack];
-      console.log(newEdges);
       return newEdges;
     });
   };
@@ -69,10 +103,9 @@ export function TuringEdge({
           }}
           className="nodrag nopan"
         >
-          <input
-            className="w-14 border rounded-sm text-center text-lg"
-            value={edgeValue}
-            onChange={(e) => onChangeHandler(e.target.value)}
+          <EditableDiv
+            edgeValue={edgeValue}
+            onChangeHandler={onChangeHandler}
           />
         </div>
       </EdgeLabelRenderer>
