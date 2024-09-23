@@ -1,15 +1,4 @@
-.customNodeBody {
-    width: 64px;
-    height: 64px;
-    position: relative;
-    overflow: hidden;
-    border-radius: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-  }
-  
+
   .customNode:before {
     content: '';
     position: absolute;

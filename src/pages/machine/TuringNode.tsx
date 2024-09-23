@@ -7,7 +7,6 @@ import {
 } from "@xyflow/react";
 
 import "./TuringNodeStyles.css";
-import { useTheme } from "@/hooks/useTheme";
 
 export type TuringNode = Node<
   { isStart: boolean; isFinal: boolean; isActive: boolean },
@@ -16,22 +15,18 @@ export type TuringNode = Node<
 
 export function TuringNode({ id, data }: NodeProps<TuringNode>) {
   const connection = useConnection();
-  const { theme } = useTheme();
-  const isDark =
-    theme == "dark" ||
-    (theme == "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches == true);
 
   return (
     <div className="customNode">
       <div
-        className="customNodeBody"
-        style={{
-          backgroundColor: data.isFinal
-            ? "bg-"
+        className={`w-16 h-16 relative overflow-hidden rounded-full flex justify-center items-center font-bold ${
+          data.isFinal
+            ? "bg-destructive"
             : data.isStart
-            ? "mediumseagreen"
-            : "midnightblue",
+            ? "bg-primary"
+            : "bg-secondary"
+        }`}
+        style={{
           border: data.isActive ? "4px solid lightpink" : "none",
         }}
       >
@@ -48,7 +43,17 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
           type="target"
           isConnectableStart={false}
         />
-        <span className="text-white">{id}</span>
+        <span
+          className={
+            data.isFinal
+              ? "text-destructive-foreground"
+              : data.isStart
+              ? "text-primary-foreground"
+              : "text-secondary-foreground"
+          }
+        >
+          {id}
+        </span>
       </div>
     </div>
   );
