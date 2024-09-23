@@ -202,9 +202,9 @@ export default function TuringMachine() {
             // @ts-ignore
             data: { ...params.data, edgeValue: "_,_,>" },
             markerEnd: {
+              type: MarkerType.ArrowClosed,
               width: 20,
               height: 20,
-              type: MarkerType.Arrow,
             },
           },
           eds
