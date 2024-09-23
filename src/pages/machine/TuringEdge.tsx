@@ -1,3 +1,4 @@
+import { useTheme } from "@/hooks/useTheme";
 import { getEdgeParams } from "@/lib/utils";
 import {
   BaseEdge,
@@ -12,11 +13,16 @@ import { useEffect, useRef, useState } from "react";
 const EditableDiv = ({
   edgeValue,
   onChangeHandler,
+  theme,
 }: {
   edgeValue: string;
   onChangeHandler: (value: string) => void;
+  theme: string;
 }) => {
   const contentEditableRef = useRef(null);
+  const isDark =
+    theme == "dark" ||
+    window.matchMedia("(prefers-color-scheme: dark)").matches == true;
 
   useEffect(() => {
     // Set the content of the div when edgeValue changes
@@ -38,7 +44,9 @@ const EditableDiv = ({
     <div
       contentEditable="plaintext-only"
       ref={contentEditableRef}
-      className="min-w-14 px-2 bg-white border rounded-sm text-center text-lg overflow-auto cursor-text"
+      className={`min-w-14 px-2 ${
+        isDark ? "bg-slate-800" : "bg-white text-black"
+      } border rounded-sm text-center text-lg overflow-auto cursor-text`}
       onInput={handleInput}
     />
   );
@@ -52,14 +60,13 @@ export function TuringEdge({
   target,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   style = {},
   markerEnd,
   data,
 }: EdgeProps) {
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
+  const { theme } = useTheme();
 
   if (!sourceNode || !targetNode) {
     return null;
@@ -88,8 +95,7 @@ export function TuringEdge({
       const filteredEdges = edges.filter((edge) => edge.id !== id);
       const edgeToAddBack = edges.filter((edge) => edge.id === id)[0];
       edgeToAddBack.data = { ...edgeToAddBack.data, edgeValue: value };
-      const newEdges = [...filteredEdges, edgeToAddBack];
-      return newEdges;
+      return [...filteredEdges, edgeToAddBack];
     });
   };
 
@@ -121,6 +127,7 @@ export function TuringEdge({
           <EditableDiv
             edgeValue={edgeValue}
             onChangeHandler={onChangeHandler}
+            theme={theme}
           />
         </div>
       </EdgeLabelRenderer>

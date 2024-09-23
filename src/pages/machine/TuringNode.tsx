@@ -7,26 +7,40 @@ import {
 } from "@xyflow/react";
 
 import "./TuringNodeStyles.css";
+import { useTheme } from "@/hooks/useTheme";
 
 export type TuringNode = Node<
   { isStart: boolean; isFinal: boolean; isActive: boolean },
   "turing"
 >;
 
+function getBackgroundColour(
+  isDark: boolean,
+  isStart: boolean,
+  isFinal: boolean
+) {
+  if (isDark)
+    return isFinal ? "indianred" : isStart ? "mediumseagreen" : "midnightblue";
+  return isFinal ? "lightcoral" : isStart ? "lightseagreen" : "lightskyblue";
+}
+
 export function TuringNode({ id, data }: NodeProps<TuringNode>) {
   const connection = useConnection();
-  const isTarget = connection.inProgress && connection.fromNode.id !== id;
+  const { theme } = useTheme();
+  const isDark =
+    theme == "dark" ||
+    window.matchMedia("(prefers-color-scheme: dark)").matches == true;
 
   return (
     <div className="customNode">
       <div
         className="customNodeBody"
         style={{
-          backgroundColor: data.isFinal
-            ? "lightcoral"
-            : data.isStart
-            ? "lightseagreen"
-            : "lightskyblue",
+          backgroundColor: getBackgroundColour(
+            isDark,
+            data.isStart,
+            data.isFinal
+          ),
           border: data.isActive ? "4px solid lightpink" : "none",
         }}
       >
