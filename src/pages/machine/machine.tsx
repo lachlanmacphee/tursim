@@ -107,7 +107,6 @@ export default function TuringMachine() {
                 <div key={idx} className="flex flex-col items-center">
                   <Input
                     className="h-16 w-16 text-center text-3xl"
-                    minLength={1}
                     maxLength={1}
                     value={machine.tape[idx]}
                     onChange={(e) => machine.setTapeValue(e, idx)}
@@ -123,7 +122,6 @@ export default function TuringMachine() {
               <Input
                 key={idx}
                 className="h-16 w-16 text-center text-3xl"
-                minLength={1}
                 maxLength={1}
                 value={machine.tape[idx]}
                 onChange={(e) => machine.setTapeValue(e, idx)}

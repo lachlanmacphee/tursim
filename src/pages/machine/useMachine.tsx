@@ -160,16 +160,13 @@ export const useMachine = () => {
   };
 
   const setTapeValue = (e: ChangeEvent<HTMLInputElement>, idx: number) => {
-    const newSymbol = e.target.value; // Get the new symbol from the input field
+    const newSymbol = e.target.value;
 
-    // Only allow single character updates due to minLength and maxLength constraints
-    if (newSymbol.length === 1) {
-      setTape((prevTape: string[]) => {
-        const updatedTape = [...prevTape]; // Create a copy of the tape
-        updatedTape[idx] = newSymbol; // Overwrite the symbol at the specific index
-        return updatedTape; // Return the updated tape to set as the new state
-      });
-    }
+    setTape((prevTape: string[]) => {
+      const updatedTape = [...prevTape]; // Create a copy of the tape
+      updatedTape[idx] = newSymbol; // Overwrite the symbol at the specific index
+      return updatedTape; // Return the updated tape to set as the new state
+    });
   };
 
   const saveTape = () => {
