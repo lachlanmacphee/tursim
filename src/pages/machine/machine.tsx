@@ -21,6 +21,7 @@ import {
   type OnEdgesChange,
   type NodeTypes,
   type DefaultEdgeOptions,
+  MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useTheme } from "@/hooks/useTheme";
@@ -77,6 +78,11 @@ const initialEdges: Edge[] = [
     target: "2",
     type: "turing",
     data: { edgeValue: "_,_,>" },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 20,
+      height: 20,
+    },
   },
   {
     id: "e2-3",
@@ -84,6 +90,11 @@ const initialEdges: Edge[] = [
     target: "3",
     type: "turing",
     data: { edgeValue: "_,_,>" },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 20,
+      height: 20,
+    },
   },
 ];
 

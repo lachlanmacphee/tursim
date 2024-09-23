@@ -2,6 +2,7 @@ import { Connection } from "@xyflow/react";
 import { devWarn, EdgeBase, errorMessages, isEdgeBase } from "@xyflow/system";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { MarkerType } from "@xyflow/react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -32,6 +33,11 @@ export const customAddEdge = <EdgeType extends EdgeBase>(
       ...edgeParams,
       type: "turing",
       data: { ...edgeParams.data, edgeValue: "_,_,>" },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+      },
     };
   } else {
     edge = {
@@ -40,6 +46,9 @@ export const customAddEdge = <EdgeType extends EdgeBase>(
       type: "turing",
       // @ts-ignore
       data: { ...edgeParams.data, edgeValue: "_,_,>" },
+      markerEnd: {
+        type: MarkerType.Arrow,
+      },
     } as EdgeType;
   }
 
