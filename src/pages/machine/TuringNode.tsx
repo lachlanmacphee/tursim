@@ -14,16 +14,6 @@ export type TuringNode = Node<
   "turing"
 >;
 
-function getBackgroundColour(
-  isDark: boolean,
-  isStart: boolean,
-  isFinal: boolean
-) {
-  if (isDark)
-    return isFinal ? "indianred" : isStart ? "mediumseagreen" : "midnightblue";
-  return isFinal ? "lightcoral" : isStart ? "lightseagreen" : "lightskyblue";
-}
-
 export function TuringNode({ id, data }: NodeProps<TuringNode>) {
   const connection = useConnection();
   const { theme } = useTheme();
@@ -37,11 +27,11 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
       <div
         className="customNodeBody"
         style={{
-          backgroundColor: getBackgroundColour(
-            isDark,
-            data.isStart,
-            data.isFinal
-          ),
+          backgroundColor: data.isFinal
+            ? "bg-"
+            : data.isStart
+            ? "mediumseagreen"
+            : "midnightblue",
           border: data.isActive ? "4px solid lightpink" : "none",
         }}
       >

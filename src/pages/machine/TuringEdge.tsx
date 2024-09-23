@@ -13,17 +13,11 @@ import { useEffect, useRef, useState } from "react";
 const EditableDiv = ({
   edgeValue,
   onChangeHandler,
-  theme,
 }: {
   edgeValue: string;
   onChangeHandler: (value: string) => void;
-  theme: string;
 }) => {
   const contentEditableRef = useRef(null);
-  const isDark =
-    theme == "dark" ||
-    (theme == "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches == true);
 
   useEffect(() => {
     if (contentEditableRef.current) {
@@ -48,9 +42,7 @@ const EditableDiv = ({
     <div
       contentEditable="true"
       ref={contentEditableRef}
-      className={`min-w-14 px-2 ${
-        isDark ? "bg-slate-800 text-white" : "bg-white text-black"
-      } border rounded-sm text-center text-lg overflow-auto cursor-text`}
+      className="min-w-14 px-2 bg-background border rounded-sm text-center text-lg overflow-auto cursor-text"
       onInput={handleInput}
     />
   );
@@ -71,7 +63,6 @@ export function TuringEdge({
   const isSelfConnecting = source == target;
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
-  const { theme } = useTheme();
 
   if (!sourceNode || !targetNode) {
     return null;
@@ -140,7 +131,6 @@ export function TuringEdge({
           <EditableDiv
             edgeValue={edgeValue}
             onChangeHandler={onChangeHandler}
-            theme={theme}
           />
         </div>
       </EdgeLabelRenderer>

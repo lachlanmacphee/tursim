@@ -1,6 +1,8 @@
 import { NavLink } from "react-router-dom";
 import { appConfig } from "@/config/app";
 import { ModeToggle } from "../mode-toggle";
+import { SettingsIcon } from "lucide-react";
+import { Button } from "../ui/button";
 
 export function Header() {
   return (
@@ -14,7 +16,7 @@ export function Header() {
         <a href="/" className="mr-6 flex items-center space-x-2 md:hidden">
           <span className="font-bold inline-block">{appConfig.name}</span>
         </a>
-        <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
+        <p className="text-center text-sm text-pretty leading-loose text-muted-foreground md:text-left">
           Built by{" "}
           <a
             href={appConfig.author.url}
@@ -35,7 +37,12 @@ export function Header() {
           </a>
           .
         </p>
-        <ModeToggle />
+        <div className="flex gap-2 items-center">
+          <Button variant="ghost" size="icon">
+            <SettingsIcon />
+          </Button>
+          <ModeToggle />
+        </div>
       </div>
     </header>
   );
