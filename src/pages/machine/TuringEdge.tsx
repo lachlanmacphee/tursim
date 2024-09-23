@@ -26,24 +26,29 @@ const EditableDiv = ({
       window.matchMedia("(prefers-color-scheme: dark)").matches == true);
 
   useEffect(() => {
-    // Set the content of the div when edgeValue changes
     if (contentEditableRef.current) {
       // @ts-ignore
-      contentEditableRef.current.textContent = edgeValue;
+      const currentText = contentEditableRef.current.textContent;
+      if (currentText !== edgeValue) {
+        // @ts-ignore
+        contentEditableRef.current.textContent = edgeValue;
+      }
     }
   }, [edgeValue]);
 
   const handleInput = () => {
     if (contentEditableRef.current) {
-      // Update value in parent component when content changes
-      // @ts-ignore
-      onChangeHandler(contentEditableRef.current.textContent);
+      if (contentEditableRef.current) {
+        // @ts-ignore
+        const text = contentEditableRef.current.textContent || '';
+        onChangeHandler(text);
+      }
     }
   };
 
   return (
     <div
-      contentEditable="plaintext-only"
+      contentEditable="true"
       ref={contentEditableRef}
       className={`min-w-14 px-2 ${
         isDark ? "bg-slate-800 text-white" : "bg-white text-black"
