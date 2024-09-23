@@ -1,10 +1,10 @@
 import {
   ChevronUpIcon,
+  CirclePlusIcon,
   DownloadIcon,
-  HardDriveDownload,
-  HardDriveUpload,
+  FolderOpenIcon,
   PlayIcon,
-  PlusIcon,
+  SaveIcon,
   Undo2Icon,
 } from "lucide-react";
 
@@ -22,7 +22,7 @@ import {
   defaultEdgeOptions,
   nodeTypes,
 } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default function TuringMachine() {
   const { theme } = useTheme();
@@ -36,29 +36,24 @@ export default function TuringMachine() {
     <div className="flex-grow flex flex-col p-4 gap-4 container">
       <div className="border grid grid-cols-[80px,1fr] flex-grow rounded-lg shadow">
         <div className="border-r p-2 flex flex-col items-center gap-2">
+          <span className="font-extralight text-sm">DRAW</span>
           <ToolButton
             name="addNode"
             onClick={machine.addNode}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <PlusIcon className="w-12 h-12" />
+            <CirclePlusIcon className="w-10 h-10" />
           </ToolButton>
+          <Separator className="w-14 mt-2" />
+          <span className="font-extralight text-sm">TAPE</span>
           <ToolButton
             name="playTape"
             onClick={machine.playTape}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <PlayIcon className="w-12 h-12" />
-          </ToolButton>
-          <ToolButton
-            name="resetTapeHead"
-            onClick={machine.resetTape}
-            activeTool={machine.activeTool}
-            setActiveTool={machine.setActiveTool}
-          >
-            <Undo2Icon className="w-12 h-12" />
+            <PlayIcon className="w-10 h-10" />
           </ToolButton>
           <ToolButton
             name="changeSpeed"
@@ -69,12 +64,56 @@ export default function TuringMachine() {
             <span>{machine.speed}%</span>
           </ToolButton>
           <ToolButton
+            name="resetTapeHead"
+            onClick={machine.resetTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <Undo2Icon className="w-10 h-10" />
+          </ToolButton>
+          <ToolButton
+            name="saveTape"
+            onClick={machine.saveTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <SaveIcon className="w-10 h-10" />
+          </ToolButton>
+          <ToolButton
+            name="loadTape"
+            onClick={machine.loadTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <FolderOpenIcon className="w-10 h-10" />
+          </ToolButton>
+          <Separator className="w-14 mt-2" />
+          <span className="font-extralight text-sm">MACHINE</span>
+          <ToolButton
             name="saveMachine"
             onClick={machine.saveMachine}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <DownloadIcon className="w-12 h-12" />
+            <SaveIcon className="w-10 h-10" />
+          </ToolButton>
+          <ToolButton
+            name="loadMachine"
+            onClick={machine.loadMachine}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <FolderOpenIcon className="w-10 h-10" />
+          </ToolButton>
+          <Separator className="w-14 mt-2" />
+          <span className="font-extralight text-sm">TEST</span>
+          <ToolButton
+            name="saveEdgeToNodeDict"
+            onClick={machine.saveEdgeToNodeDict}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <DownloadIcon className="w-10 h-10" />
           </ToolButton>
         </div>
         <div className="h-full">
@@ -131,22 +170,6 @@ export default function TuringMachine() {
           })}
         </div>
         <ScrollBar orientation="horizontal" />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute bottom-2 right-2"
-          onClick={machine.saveTape}
-        >
-          <HardDriveDownload />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute bottom-2 right-12"
-          onClick={machine.loadTape}
-        >
-          <HardDriveUpload />
-        </Button>
       </ScrollArea>
     </div>
   );

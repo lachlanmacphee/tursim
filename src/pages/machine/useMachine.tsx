@@ -76,7 +76,7 @@ export const useMachine = () => {
     setNodes(newNodesArray);
   }, [nodes]);
 
-  const saveMachine = () => {
+  const saveEdgeToNodeDict = () => {
     const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
     const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
       JSON.stringify(edgesToNodesRecord)
@@ -174,9 +174,9 @@ export const useMachine = () => {
   };
 
   const loadTape = () => {
-    const res = localStorage.getItem("tape");
-    if (res) {
-      const parsedTape = JSON.parse(res) as string[];
+    const lsTape = localStorage.getItem("tape");
+    if (lsTape) {
+      const parsedTape = JSON.parse(lsTape) as string[];
       setTape(parsedTape);
     }
   };
@@ -186,6 +186,22 @@ export const useMachine = () => {
     const startStates = nodes.filter((node) => node.data.isStart);
     if (startStates.length == 1) {
       setActiveNodeId(startStates[0].id);
+    }
+  };
+
+  const saveMachine = () => {
+    localStorage.setItem("nodes", JSON.stringify(nodes));
+    localStorage.setItem("edges", JSON.stringify(edges));
+  };
+
+  const loadMachine = () => {
+    const lsNodes = localStorage.getItem("nodes");
+    const lsEdges = localStorage.getItem("edges");
+    if (lsNodes && lsEdges) {
+      const parsedNodes = JSON.parse(lsNodes) as Node[];
+      const parsedEdges = JSON.parse(lsEdges) as Edge[];
+      setNodes(parsedNodes);
+      setEdges(parsedEdges);
     }
   };
 
@@ -219,13 +235,15 @@ export const useMachine = () => {
     onConnect,
     // handlers
     addNode,
-    saveMachine,
     handleSymbolClick,
     playTape,
     setTapeValue,
     saveTape,
     loadTape,
     resetTape,
+    saveMachine,
+    loadMachine,
+    saveEdgeToNodeDict,
     changeSpeed,
   };
 };
