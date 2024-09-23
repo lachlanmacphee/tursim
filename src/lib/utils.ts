@@ -1,68 +1,85 @@
-import { Connection } from "@xyflow/react";
-import { devWarn, EdgeBase, errorMessages, isEdgeBase } from "@xyflow/system";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { MarkerType } from "@xyflow/react";
+import { Position } from "@xyflow/react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const getEdgeId = ({ source, target }: Connection | EdgeBase): string =>
-  `e${source}-${target}`;
+// this helper function returns the intersection point
+// of the line between the center of the intersectionNode and the target node
+function getNodeIntersection(
+  // @ts-ignore
+  intersectionNode,
+  // @ts-ignore
+  targetNode
+) {
+  // https://math.stackexchange.com/questions/1724792/an-algorithm-for-finding-the-intersection-point-between-a-center-of-vision-and-a
+  const { width: intersectionNodeWidth, height: intersectionNodeHeight } =
+    intersectionNode.measured;
+  const intersectionNodePosition = intersectionNode.internals.positionAbsolute;
+  const targetPosition = targetNode.internals.positionAbsolute;
 
-const connectionExists = (edge: EdgeBase, edges: EdgeBase[]) => {
-  return edges.some(
-    (el) => el.source === edge.source && el.target === edge.target
-  );
-};
+  const w = intersectionNodeWidth / 2;
+  const h = intersectionNodeHeight / 2;
 
-export const customAddEdge = <EdgeType extends EdgeBase>(
-  edgeParams: EdgeType | Connection,
-  edges: EdgeType[]
-): EdgeType[] => {
-  if (!edgeParams.source || !edgeParams.target) {
-    devWarn("006", errorMessages["error006"]());
+  const x2 = intersectionNodePosition.x + w;
+  const y2 = intersectionNodePosition.y + h;
+  const x1 = targetPosition.x + targetNode.measured.width / 2;
+  const y1 = targetPosition.y + targetNode.measured.height / 2;
 
-    return edges;
+  const xx1 = (x1 - x2) / (2 * w) - (y1 - y2) / (2 * h);
+  const yy1 = (x1 - x2) / (2 * w) + (y1 - y2) / (2 * h);
+  const a = 1 / (Math.abs(xx1) + Math.abs(yy1));
+  const xx3 = a * xx1;
+  const yy3 = a * yy1;
+  const x = w * (xx3 + yy3) + x2;
+  const y = h * (-xx3 + yy3) + y2;
+
+  return { x, y };
+}
+
+// returns the position (top,right,bottom or right) passed node compared to the intersection point
+function getEdgePosition(
+  node: { internals: { positionAbsolute: any } },
+  intersectionPoint: { x: number; y: number }
+) {
+  const n = { ...node.internals.positionAbsolute, ...node };
+  const nx = Math.round(n.x);
+  const ny = Math.round(n.y);
+  const px = Math.round(intersectionPoint.x);
+  const py = Math.round(intersectionPoint.y);
+
+  if (px <= nx + 1) {
+    return Position.Left;
+  }
+  if (px >= nx + n.measured.width - 1) {
+    return Position.Right;
+  }
+  if (py <= ny + 1) {
+    return Position.Top;
+  }
+  if (py >= n.y + n.measured.height - 1) {
+    return Position.Bottom;
   }
 
-  let edge: EdgeType;
-  if (isEdgeBase(edgeParams)) {
-    edge = {
-      ...edgeParams,
-      type: "turing",
-      data: { ...edgeParams.data, edgeValue: "_,_,>" },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-      },
-    };
-  } else {
-    edge = {
-      ...edgeParams,
-      id: getEdgeId(edgeParams),
-      type: "turing",
-      // @ts-ignore
-      data: { ...edgeParams.data, edgeValue: "_,_,>" },
-      markerEnd: {
-        type: MarkerType.Arrow,
-      },
-    } as EdgeType;
-  }
+  return Position.Top;
+}
 
-  if (connectionExists(edge, edges)) {
-    return edges;
-  }
+// @ts-ignore
+export function getEdgeParams(source, target) {
+  const sourceIntersectionPoint = getNodeIntersection(source, target);
+  const targetIntersectionPoint = getNodeIntersection(target, source);
 
-  if (edge.sourceHandle === null) {
-    delete edge.sourceHandle;
-  }
+  const sourcePos = getEdgePosition(source, sourceIntersectionPoint);
+  const targetPos = getEdgePosition(target, targetIntersectionPoint);
 
-  if (edge.targetHandle === null) {
-    delete edge.targetHandle;
-  }
-
-  return edges.concat(edge);
-};
+  return {
+    sx: sourceIntersectionPoint.x,
+    sy: sourceIntersectionPoint.y,
+    tx: targetIntersectionPoint.x,
+    ty: targetIntersectionPoint.y,
+    sourcePos,
+    targetPos,
+  };
+}

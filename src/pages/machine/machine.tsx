@@ -22,6 +22,7 @@ import {
   type NodeTypes,
   type DefaultEdgeOptions,
   MarkerType,
+  addEdge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useTheme } from "@/hooks/useTheme";
@@ -30,7 +31,6 @@ import { TuringNode } from "./TuringNode";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TuringEdge } from "./TuringEdge";
-import { customAddEdge } from "@/lib/utils";
 
 const BASE_INTERVAL = 500;
 
@@ -193,7 +193,23 @@ export default function TuringMachine() {
     [setEdges]
   );
   const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((eds) => customAddEdge(connection, eds)),
+    (params) =>
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            type: "turing",
+            // @ts-ignore
+            data: { ...params.data, edgeValue: "_,_,>" },
+            markerEnd: {
+              width: 20,
+              height: 20,
+              type: MarkerType.Arrow,
+            },
+          },
+          eds
+        )
+      ),
     [setEdges]
   );
 

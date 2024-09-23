@@ -1,8 +1,10 @@
+import { getEdgeParams } from "@/lib/utils";
 import {
   BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   getBezierPath,
+  useInternalNode,
   useReactFlow,
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
@@ -56,14 +58,27 @@ export function TuringEdge({
   markerEnd,
   data,
 }: EdgeProps) {
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+
+  if (!sourceNode || !targetNode) {
+    return null;
+  }
+
+  const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
+    sourceNode,
+    targetNode
+  );
+
   const [bezierEdgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
+    sourceX: sx,
+    sourceY: sy,
+    sourcePosition: sourcePos,
+    targetPosition: targetPos,
+    targetX: tx,
+    targetY: ty,
   });
+
   const [edgeValue, setEdgeValue] = useState(data!.edgeValue as string);
   const { setEdges } = useReactFlow();
 
