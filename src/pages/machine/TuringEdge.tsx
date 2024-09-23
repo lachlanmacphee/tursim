@@ -22,7 +22,8 @@ const EditableDiv = ({
   const contentEditableRef = useRef(null);
   const isDark =
     theme == "dark" ||
-    window.matchMedia("(prefers-color-scheme: dark)").matches == true;
+    (theme == "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches == true);
 
   useEffect(() => {
     // Set the content of the div when edgeValue changes
@@ -45,7 +46,7 @@ const EditableDiv = ({
       contentEditable="plaintext-only"
       ref={contentEditableRef}
       className={`min-w-14 px-2 ${
-        isDark ? "bg-slate-800" : "bg-white text-black"
+        isDark ? "bg-slate-800 text-white" : "bg-white text-black"
       } border rounded-sm text-center text-lg overflow-auto cursor-text`}
       onInput={handleInput}
     />

@@ -29,7 +29,8 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
   const { theme } = useTheme();
   const isDark =
     theme == "dark" ||
-    window.matchMedia("(prefers-color-scheme: dark)").matches == true;
+    (theme == "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches == true);
 
   return (
     <div className="customNode">
