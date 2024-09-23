@@ -2,10 +2,10 @@ import {
   ChevronUpIcon,
   CirclePlusIcon,
   DownloadIcon,
-  FolderOpenIcon,
+  HardDriveUploadIcon,
   PlayIcon,
+  RotateCcwIcon,
   SaveIcon,
-  Undo2Icon,
 } from "lucide-react";
 
 import { ReactFlow, Background, Controls } from "@xyflow/react";
@@ -39,82 +39,91 @@ export default function TuringMachine() {
           <span className="font-extralight text-sm">DRAW</span>
           <ToolButton
             name="addNode"
+            tooltip="Add Node"
             onClick={machine.addNode}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <CirclePlusIcon className="w-10 h-10" />
-          </ToolButton>
-          <Separator className="w-14 mt-2" />
-          <span className="font-extralight text-sm">TAPE</span>
-          <ToolButton
-            name="playTape"
-            onClick={machine.playTape}
-            activeTool={machine.activeTool}
-            setActiveTool={machine.setActiveTool}
-          >
-            <PlayIcon className="w-10 h-10" />
-          </ToolButton>
-          <ToolButton
-            name="changeSpeed"
-            onClick={machine.changeSpeed}
-            activeTool={machine.activeTool}
-            setActiveTool={machine.setActiveTool}
-          >
-            <span className="font-light text-xs">{machine.speed}%</span>
-          </ToolButton>
-          <ToolButton
-            name="resetTapeHead"
-            onClick={machine.resetTape}
-            activeTool={machine.activeTool}
-            setActiveTool={machine.setActiveTool}
-          >
-            <Undo2Icon className="w-10 h-10" />
-          </ToolButton>
-          <ToolButton
-            name="saveTape"
-            onClick={machine.saveTape}
-            activeTool={machine.activeTool}
-            setActiveTool={machine.setActiveTool}
-          >
-            <SaveIcon className="w-10 h-10" />
-          </ToolButton>
-          <ToolButton
-            name="loadTape"
-            onClick={machine.loadTape}
-            activeTool={machine.activeTool}
-            setActiveTool={machine.setActiveTool}
-          >
-            <FolderOpenIcon className="w-10 h-10" />
+            <CirclePlusIcon className="w-14 h-14" />
           </ToolButton>
           <Separator className="w-14 mt-2" />
           <span className="font-extralight text-sm">MACHINE</span>
           <ToolButton
             name="saveMachine"
+            tooltip="Save Machine"
             onClick={machine.saveMachine}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <SaveIcon className="w-10 h-10" />
+            <SaveIcon />
           </ToolButton>
           <ToolButton
             name="loadMachine"
+            tooltip="Load Machine"
             onClick={machine.loadMachine}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <FolderOpenIcon className="w-10 h-10" />
+            <HardDriveUploadIcon />
           </ToolButton>
           <Separator className="w-14 mt-2" />
           <span className="font-extralight text-sm">TEST</span>
           <ToolButton
             name="saveEdgeToNodeDict"
+            tooltip="Download"
             onClick={machine.saveEdgeToNodeDict}
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <DownloadIcon className="w-10 h-10" />
+            <DownloadIcon />
           </ToolButton>
+          <span className="font-extralight text-sm">TAPE</span>
+          <ToolButton
+            name="playTape"
+            tooltip="Play Tape"
+            onClick={machine.playTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <PlayIcon />
+          </ToolButton>
+          <ToolButton
+            name="changeSpeed"
+            tooltip="Change Speed"
+            onClick={machine.changeSpeed}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <span className="font-light text-sm">{machine.speed}%</span>
+          </ToolButton>
+          <ToolButton
+            name="resetTapeHead"
+            tooltip="Reset Tape"
+            onClick={machine.resetTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <RotateCcwIcon />
+          </ToolButton>
+          <ToolButton
+            name="saveTape"
+            tooltip="Save Tape"
+            onClick={machine.saveTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <SaveIcon />
+          </ToolButton>
+          <ToolButton
+            name="loadTape"
+            tooltip="Load Tape"
+            onClick={machine.loadTape}
+            activeTool={machine.activeTool}
+            setActiveTool={machine.setActiveTool}
+          >
+            <HardDriveUploadIcon />
+          </ToolButton>
+          <Separator className="w-14 mt-2" />
         </div>
         <div className="h-full">
           <ReactFlow
