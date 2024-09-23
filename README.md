@@ -9,8 +9,9 @@ Follows the Monash University FIT2014 definition of a Turing machine:
 - Blank cells denoted by an `_`
 
 # Roadmap
-- Multiple connections between a set of two nodes. Currently it only supports 1 connection.
-- Ability for nodes to redirect back to themselves
+- Machine presets
+- Undo / redo
+- Keyboard shortcuts
 
 # Implemented Features
 - Infinite canvas that's pannable, zoomable, scrollable, lockable, full-screen-able
@@ -22,4 +23,11 @@ Follows the Monash University FIT2014 definition of a Turing machine:
 - Animated playback of the tape (including where it is on the diagram and a moving head).
 - Being able to use the tape in correspondence with the machine when running
 - Execution speed control (implemented in intervals 20%, 40%, 60%, 80%, 100%)
-- Output of machine in JSON format so it can be validated by scripts
+- Output of edge connections in JSON format so it can be validated by scripts (this is not the same as saving the machine)
+- Ability for nodes to redirect back to themselves
+- Dynamic edges for readability
+- Light/dark mode 
+- Saving/loading tapes
+- Saving/loading machines
+- Spawn nodes at random points rather than overlaying
+- Multiple connections between a set of two nodes
