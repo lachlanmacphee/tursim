@@ -38,11 +38,9 @@ const EditableDiv = ({
 
   const handleInput = () => {
     if (contentEditableRef.current) {
-      if (contentEditableRef.current) {
-        // @ts-ignore
-        const text = contentEditableRef.current.textContent || '';
-        onChangeHandler(text);
-      }
+      // @ts-ignore
+      const text = contentEditableRef.current.textContent || "";
+      onChangeHandler(text);
     }
   };
 
