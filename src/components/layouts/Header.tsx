@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Icons } from "@/components/icons";
 import { appConfig } from "@/config/app";
 import { buttonVariants } from "@/components/ui/button";
-import { Logo } from "../logo";
+import { GithubIcon } from "lucide-react";
 
 export function Header() {
   return (
@@ -12,7 +10,7 @@ export function Header() {
       <div className="container px-4 md:px-8 flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <NavLink to="/" className="mr-6 flex items-center space-x-2">
-            <Logo />
+            <span className="font-bold">{appConfig.name}</span>
           </NavLink>
         </div>
         <a href="/" className="mr-6 flex items-center space-x-2 md:hidden">
@@ -38,7 +36,7 @@ export function Header() {
                   "w-9 px-0"
                 )}
               >
-                <Icons.gitHub className="h-4 w-4" />
+                <GithubIcon className="h-4 w-4" />
                 <span className="sr-only">GitHub</span>
               </div>
             </a>

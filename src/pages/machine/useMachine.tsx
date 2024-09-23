@@ -172,6 +172,18 @@ export const useMachine = () => {
     }
   };
 
+  const saveTape = () => {
+    localStorage.setItem("tape", JSON.stringify(tape));
+  };
+
+  const loadTape = () => {
+    const res = localStorage.getItem("tape");
+    if (res) {
+      const parsedTape = JSON.parse(res) as string[];
+      setTape(parsedTape);
+    }
+  };
+
   const resetTape = () => {
     setTapeHead(0);
     const startStates = nodes.filter((node) => node.data.isStart);
@@ -214,6 +226,8 @@ export const useMachine = () => {
     handleSymbolClick,
     playTape,
     setTapeValue,
+    saveTape,
+    loadTape,
     resetTape,
     changeSpeed,
   };

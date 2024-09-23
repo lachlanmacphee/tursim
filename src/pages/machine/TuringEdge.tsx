@@ -65,6 +65,7 @@ export function TuringEdge({
   markerEnd,
   data,
 }: EdgeProps) {
+  const isSelfConnecting = source == target;
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
   const { theme } = useTheme();
@@ -105,21 +106,25 @@ export function TuringEdge({
   const selfConnectingEdgePath = `M ${
     sourceX - 5
   } ${sourceY} A ${radiusX} ${radiusY} 0 1 0 ${targetX + 2} ${targetY}`;
+  const bezierTransform = `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`;
+  const selfConnectingTransform = `translate(-50%, -300%) translate(${
+    (targetX + sourceX) / 2
+  }px, ${sourceY}px)`;
 
   return (
     <>
       <BaseEdge
-        path={source == target ? selfConnectingEdgePath : bezierEdgePath}
-        markerEnd={markerEnd}
+        path={isSelfConnecting ? selfConnectingEdgePath : bezierEdgePath}
+        markerEnd={isSelfConnecting ? undefined : markerEnd}
         style={style}
       />
       <EdgeLabelRenderer>
         <div
           style={{
             position: "absolute",
-            transform: `translate(-50%, ${
-              source == target ? "-300%" : "-50%"
-            }) translate(${labelX}px,${labelY}px)`,
+            transform: isSelfConnecting
+              ? selfConnectingTransform
+              : bezierTransform,
             // if you have an interactive element, set pointer-events: all
             pointerEvents: "all",
           }}

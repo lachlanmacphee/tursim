@@ -1,10 +1,12 @@
 import {
   ChevronUpIcon,
   DownloadIcon,
+  HardDriveDownload,
+  HardDriveUpload,
   PlayIcon,
   PlusIcon,
-  ResetIcon,
-} from "@radix-ui/react-icons";
+  Undo2Icon,
+} from "lucide-react";
 
 import { ReactFlow, Background, Controls } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -20,6 +22,7 @@ import {
   defaultEdgeOptions,
   nodeTypes,
 } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
 
 export default function TuringMachine() {
   const { theme } = useTheme();
@@ -55,7 +58,7 @@ export default function TuringMachine() {
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <ResetIcon className="w-12 h-12" />
+            <Undo2Icon className="w-12 h-12" />
           </ToolButton>
           <ToolButton
             name="changeSpeed"
@@ -119,7 +122,7 @@ export default function TuringMachine() {
             return (
               <Input
                 key={idx}
-                className="h-16 w-16 text-cmachine.enter text-3xl"
+                className="h-16 w-16 text-center text-3xl"
                 minLength={1}
                 maxLength={1}
                 value={machine.tape[idx]}
@@ -130,6 +133,22 @@ export default function TuringMachine() {
           })}
         </div>
         <ScrollBar orientation="horizontal" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute bottom-2 right-2"
+          onClick={machine.saveTape}
+        >
+          <HardDriveDownload />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute bottom-2 right-12"
+          onClick={machine.loadTape}
+        >
+          <HardDriveUpload />
+        </Button>
       </ScrollArea>
     </div>
   );
