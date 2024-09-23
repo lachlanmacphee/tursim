@@ -61,7 +61,7 @@ export default function TuringMachine() {
             activeTool={machine.activeTool}
             setActiveTool={machine.setActiveTool}
           >
-            <span>{machine.speed}%</span>
+            <span className="font-light text-xs">{machine.speed}%</span>
           </ToolButton>
           <ToolButton
             name="resetTapeHead"
