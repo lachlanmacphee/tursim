@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Position } from "@xyflow/react";
-
+import { Edge, Position } from "@xyflow/react";
+import { type Node } from "@xyflow/react";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -83,3 +83,73 @@ export function getEdgeParams(source, target) {
     targetPos,
   };
 }
+
+export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
+  const edgesToNodesRecord: {
+    [id: string]: {
+      readLetter: string;
+      writeLetter: string | undefined;
+      direction: string;
+      node: Node;
+    }[];
+  } = {};
+
+  edges.forEach((edge) => {
+    const sourceId = edge.source;
+    const targetId = edge.target;
+    const edgeValue = edge!.data!.edgeValue as string;
+    const connections = edgeValue.split(";");
+
+    connections.forEach((connection) => {
+      const edgeValueSplit = connection.split(",");
+
+      let newReadLetter: string | undefined = undefined;
+      let newWriteLetter: string | undefined = undefined;
+      let newDirection: string | undefined = undefined;
+      if (edgeValueSplit.length == 2) {
+        newReadLetter = edgeValueSplit[0];
+        newDirection = edgeValueSplit[1];
+      } else if (edgeValueSplit.length == 3) {
+        newReadLetter = edgeValueSplit[0];
+        newWriteLetter = edgeValueSplit[1];
+        newDirection = edgeValueSplit[2];
+      } else {
+        console.error("Each edge must have either 2 or 3 values");
+        return;
+      }
+
+      const currArr = edgesToNodesRecord[sourceId];
+      if (currArr) {
+        const isLetterPresent =
+          currArr.filter(({ readLetter }) => readLetter == newReadLetter)
+            .length > 0;
+        if (isLetterPresent) {
+          console.error(
+            "Each node must have only one of each letter outgoing max"
+          );
+          return;
+        }
+        edgesToNodesRecord[sourceId] = [
+          ...currArr,
+          {
+            readLetter: newReadLetter,
+            writeLetter: newWriteLetter,
+            direction: newDirection,
+            node: nodes.filter((node) => node.id == targetId)[0],
+          },
+        ];
+      } else {
+        edgesToNodesRecord[sourceId] = [
+          {
+            readLetter: newReadLetter,
+            writeLetter: newWriteLetter,
+            direction: newDirection,
+            node: nodes.filter((node) => node.id == targetId)[0],
+          },
+        ];
+      }
+    });
+  });
+
+  return edgesToNodesRecord;
+};
