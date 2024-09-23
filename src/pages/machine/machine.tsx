@@ -77,6 +77,7 @@ export default function TuringMachine() {
           >
             <DownloadIcon />
           </ToolButton>
+          <Separator className="w-14 mt-2" />
           <span className="font-extralight text-sm">TAPE</span>
           <ToolButton
             name="playTape"
@@ -123,7 +124,6 @@ export default function TuringMachine() {
           >
             <HardDriveUploadIcon />
           </ToolButton>
-          <Separator className="w-14 mt-2" />
         </div>
         <div className="h-full">
           <ReactFlow
