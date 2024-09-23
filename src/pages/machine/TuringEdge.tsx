@@ -101,6 +101,10 @@ export function TuringEdge({
     });
   };
 
+  useEffect(() => {
+    setEdgeValue(data!.edgeValue as string);
+  }, [data]);
+
   const radiusX = (sourceX - targetX) * 0.6;
   const radiusY = 50;
   const selfConnectingEdgePath = `M ${
