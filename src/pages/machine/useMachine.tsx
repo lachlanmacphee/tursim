@@ -70,7 +70,7 @@ export const useMachine = () => {
       id,
       type: "turing",
       data: { isStart: false, isFinal: false },
-      position: { x: 5, y: 100 },
+      position: { x: Math.random() * 100, y: Math.random() * 100 },
     };
     const newNodesArray = [...nodes, newNode];
     setNodes(newNodesArray);
