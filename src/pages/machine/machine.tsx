@@ -136,7 +136,7 @@ export default function TuringMachine() {
               <Input
                 key={idx}
                 className={`h-14 w-14 text-center text-3xl ${
-                  idx == machine.tapeHead && "border-red-400"
+                  idx == machine.tapeHead && "border-primary border-2"
                 }`}
                 maxLength={1}
                 value={machine.tape[idx]}

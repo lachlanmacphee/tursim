@@ -41,6 +41,7 @@ const EditableDiv = ({
   return (
     <div
       contentEditable="true"
+      spellCheck="false"
       ref={contentEditableRef}
       className="min-w-14 px-2 bg-background border rounded-sm text-center text-lg overflow-auto cursor-text"
       onInput={handleInput}
