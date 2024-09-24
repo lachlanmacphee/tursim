@@ -29,7 +29,13 @@ export function ToolButton({
           <Button
             variant={activeTool == name ? "default" : "outline"}
             className="w-14 h-14"
-            onClick={() => (onClick ? onClick() : setActiveTool(name))}
+            onClick={() =>
+              onClick
+                ? onClick()
+                : activeTool == name
+                ? setActiveTool("")
+                : setActiveTool(name)
+            }
           >
             {children}
           </Button>

@@ -3,7 +3,8 @@ import { createBrowserRouter } from "react-router-dom";
 import { Applayout } from "./components/layouts/AppLayout";
 
 import NoMatch from "./pages/NoMatch";
-import Dashboard from "./pages/machine/machine";
+import Machine from "./pages/machine/machine";
+import { ReactFlowProvider } from "@xyflow/react";
 
 export const router = createBrowserRouter(
   [
@@ -13,7 +14,11 @@ export const router = createBrowserRouter(
       children: [
         {
           path: "",
-          element: <Dashboard />,
+          element: (
+            <ReactFlowProvider>
+              <Machine />
+            </ReactFlowProvider>
+          ),
         },
       ],
     },

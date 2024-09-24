@@ -1,11 +1,12 @@
 import {
-  ChevronUpIcon,
-  CirclePlusIcon,
+  CircleIcon,
   DownloadIcon,
   HardDriveUploadIcon,
   PlayIcon,
   RotateCcwIcon,
   SaveIcon,
+  SplineIcon,
+  TrashIcon,
 } from "lucide-react";
 
 import { ReactFlow, Background, Controls } from "@xyflow/react";
@@ -24,6 +25,10 @@ import {
 } from "@/lib/constants";
 import { Separator } from "@/components/ui/separator";
 
+// const tools = {
+//   addMoveNode: {key: "addMoveNode", label:  "Add/Move Node"}
+// }
+
 export default function TuringMachine() {
   const { theme } = useTheme();
   const machine = useMachine();
@@ -39,13 +44,28 @@ export default function TuringMachine() {
           <div className="flex flex-col items-center gap-2">
             <span className="font-extralight text-sm">DRAW</span>
             <ToolButton
-              name="addNode"
-              tooltip="Add Node"
-              onClick={machine.addNode}
+              name="addMoveNode"
+              tooltip="Add/Move Node"
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
-              <CirclePlusIcon className="w-14 h-14" />
+              <CircleIcon className="w-14 h-14" />
+            </ToolButton>
+            <ToolButton
+              name="addEdge"
+              tooltip="Add Edge"
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <SplineIcon className="w-14 h-14" />
+            </ToolButton>
+            <ToolButton
+              name="delete"
+              tooltip="Delete"
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <TrashIcon className="w-14 h-14" />
             </ToolButton>
             <Separator className="w-14 mt-2" />
             <span className="font-extralight text-sm">MACHINE</span>
@@ -152,7 +172,11 @@ export default function TuringMachine() {
         <ReactFlow
           nodes={machine.nodes.map((node) => ({
             ...node,
-            data: { ...node.data, isActive: machine.activeNodeId == node.id },
+            data: {
+              ...node.data,
+              isActive: machine.activeNodeId == node.id,
+              activeTool: machine.activeTool,
+            },
           }))}
           nodeTypes={nodeTypes}
           edges={machine.edges}
@@ -164,6 +188,9 @@ export default function TuringMachine() {
           fitViewOptions={fitViewOptions}
           defaultEdgeOptions={defaultEdgeOptions}
           colorMode={colorMode}
+          onClick={machine.clickHandler}
+          onNodeClick={machine.nodeClickHandler}
+          nodesConnectable={machine.activeTool == "addEdge"}
         >
           <Background />
           <Controls position="bottom-center" orientation="horizontal" />

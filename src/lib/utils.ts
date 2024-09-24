@@ -153,3 +153,16 @@ export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
 
   return edgesToNodesRecord;
 };
+
+export function getId(nodes: Node[]): string {
+  const ids = nodes.map((node) => parseInt(node.id)).toSorted((a, b) => a - b);
+
+  const newId = ids.reduce((smallestMissing, id) => {
+    if (id === smallestMissing) {
+      return smallestMissing + 1;
+    }
+    return smallestMissing;
+  }, 1);
+
+  return newId.toString();
+}

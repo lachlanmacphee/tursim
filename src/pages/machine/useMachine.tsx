@@ -1,4 +1,4 @@
-import { useState, useCallback, ChangeEvent } from "react";
+import { useState, useCallback, ChangeEvent, MouseEventHandler } from "react";
 
 import {
   applyNodeChanges,
@@ -10,10 +10,11 @@ import {
   type OnEdgesChange,
   MarkerType,
   addEdge,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { initialEdges, initialNodes } from "@/lib/constants";
-import { createEdgesToNodesRecord } from "@/lib/utils";
+import { createEdgesToNodesRecord, getId } from "@/lib/utils";
 
 const BASE_INTERVAL = 500;
 
@@ -21,9 +22,8 @@ export const useMachine = () => {
   const [activeTool, setActiveTool] = useState<string>("");
   const [tape, setTape] = useState<string[]>(new Array(50).fill("_"));
   const [tapeHead, setTapeHead] = useState<number>(0);
-  const [activeNodeId, setActiveNodeId] = useState<string | undefined>(
-    undefined
-  );
+  const [activeNodeId, setActiveNodeId] = useState<string>("1");
+  const { screenToFlowPosition } = useReactFlow();
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [speed, setSpeed] = useState<number>(100);
@@ -59,22 +59,51 @@ export const useMachine = () => {
     [setEdges]
   );
 
-  const addNode = useCallback(() => {
-    const id = (
-      Math.max.apply(
-        Math,
-        nodes.map((node) => parseInt(node.id))
-      ) + 1
-    ).toString();
-    const newNode = {
-      id,
-      type: "turing",
-      data: { isStart: false, isFinal: false },
-      position: { x: Math.random() * 100, y: Math.random() * 100 },
-    };
-    const newNodesArray = [...nodes, newNode];
-    setNodes(newNodesArray);
-  }, [nodes]);
+  const clickHandler: MouseEventHandler<HTMLDivElement> = useCallback(
+    (event) => {
+      switch (activeTool) {
+        case "addMoveNode":
+          const position = screenToFlowPosition({
+            x: event.clientX - 32,
+            y: event.clientY - 32,
+          });
+          setNodes([
+            ...nodes,
+            {
+              id: getId(nodes),
+              type: "turing",
+              data: { isStart: false, isFinal: false },
+              position,
+            },
+          ]);
+          break;
+
+        default:
+          break;
+      }
+    },
+    [activeTool, nodes]
+  );
+
+  const nodeClickHandler = useCallback(
+    (event: any, clickedNode: any) => {
+      console.log("Node click detected on node: ", clickedNode.id);
+      switch (activeTool) {
+        case "delete":
+          setNodes(nodes.filter((node) => node.id != clickedNode.id));
+          setEdges(
+            edges
+              .filter((edge) => edge.source != clickedNode.id)
+              .filter((edge) => edge.target != clickedNode.id)
+          );
+          break;
+
+        default:
+          break;
+      }
+    },
+    [activeTool, nodes, edges]
+  );
 
   const saveEdgeToNodeDict = () => {
     const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
@@ -234,7 +263,6 @@ export const useMachine = () => {
     onEdgesChange,
     onConnect,
     // handlers
-    addNode,
     handleSymbolClick,
     playTape,
     setTapeValue,
@@ -245,5 +273,7 @@ export const useMachine = () => {
     loadMachine,
     saveEdgeToNodeDict,
     changeSpeed,
+    clickHandler,
+    nodeClickHandler,
   };
 };
