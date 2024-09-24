@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { appConfig } from "@/config/app";
 import { ModeToggle } from "../mode-toggle";
-import { SettingsIcon } from "lucide-react";
+import { CassetteTapeIcon, SettingsIcon } from "lucide-react";
 import { Button } from "../ui/button";
 
 export function Header() {
@@ -10,6 +10,7 @@ export function Header() {
       <div className="container px-4 md:px-8 flex justify-between h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <NavLink to="/" className="mr-6 flex items-center space-x-2">
+            <CassetteTapeIcon />
             <span className="font-bold">{appConfig.name}</span>
           </NavLink>
         </div>
