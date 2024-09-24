@@ -23,6 +23,7 @@ export const useMachine = () => {
   const [tape, setTape] = useState<string[]>(new Array(50).fill("_"));
   const [tapeHead, setTapeHead] = useState<number>(0);
   const [activeNodeId, setActiveNodeId] = useState<string>("1");
+  const [hoveredNodeId, setHoveredNodeId] = useState<string>("");
   const { screenToFlowPosition } = useReactFlow();
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
@@ -118,6 +119,14 @@ export const useMachine = () => {
     [activeTool, nodes, edges]
   );
 
+  const nodeMouseEnterHandler = (_: any, node: any) => {
+    setHoveredNodeId(node.id);
+  };
+
+  const nodeMouseLeaveHandler = () => {
+    setHoveredNodeId("");
+  };
+
   const saveEdgeToNodeDict = () => {
     const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
     const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
@@ -153,10 +162,7 @@ export const useMachine = () => {
 
     const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
 
-    let currentNode = activeNodeId
-      ? nodes.find((node) => node.id == activeNodeId)!
-      : startStates[0];
-    setActiveNodeId(currentNode.id);
+    let currentNode = nodes.find((node) => node.id == activeNodeId)!;
     let tapeIdx = tapeHead;
     let updatedTape = [...tape];
 
@@ -291,5 +297,8 @@ export const useMachine = () => {
     clickHandler,
     nodeClickHandler,
     edgeClickHandler,
+    nodeMouseEnterHandler,
+    nodeMouseLeaveHandler,
+    hoveredNodeId,
   };
 };

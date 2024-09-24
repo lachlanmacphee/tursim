@@ -1,12 +1,13 @@
-import { useTheme } from "@/hooks/useTheme";
-import { getEdgeParams } from "@/lib/utils";
+import { getEdgeParams, getSpecialPath } from "@/lib/utils";
 import {
   BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   getBezierPath,
+  ReactFlowState,
   useInternalNode,
   useReactFlow,
+  useStore,
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -69,10 +70,33 @@ export function TuringEdge({
     return null;
   }
 
+  const [edgeValue, setEdgeValue] = useState(data!.edgeValue as string);
+  const { setEdges } = useReactFlow();
+
+  const isBiDirectionEdge = useStore((s: ReactFlowState) =>
+    s.edges.some(
+      (e) =>
+        (e.source === target && e.target === source) ||
+        (e.target === source && e.source === target)
+    )
+  );
+
   const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
     sourceNode,
     targetNode
   );
+
+  const edgePathParams = {
+    sourceX,
+    sourceY,
+    sourcePosition: sourcePos,
+    targetX,
+    targetY,
+    targetPosition: targetPos,
+  };
+
+  const offset = sourceX < targetX ? 50 : -50;
+  const bidirectionalPath = getSpecialPath(edgePathParams, offset);
 
   const [bezierEdgePath, labelX, labelY] = getBezierPath({
     sourceX: sx,
@@ -83,14 +107,11 @@ export function TuringEdge({
     targetY: ty,
   });
 
-  const [edgeValue, setEdgeValue] = useState(data!.edgeValue as string);
-  const { setEdges } = useReactFlow();
-
   const onChangeHandler = (value: string) => {
     setEdgeValue(value);
     setEdges((edges) => {
       const filteredEdges = edges.filter((edge) => edge.id !== id);
-      const edgeToAddBack = edges.filter((edge) => edge.id === id)[0];
+      const edgeToAddBack = edges.find((edge) => edge.id === id)!;
       edgeToAddBack.data = { ...edgeToAddBack.data, edgeValue: value };
       return [...filteredEdges, edgeToAddBack];
     });
@@ -109,11 +130,20 @@ export function TuringEdge({
   const selfConnectingTransform = `translate(-50%, -300%) translate(${
     (targetX + sourceX) / 2
   }px, ${sourceY}px)`;
+  const bidirectionTransform = `translate(-50%, -50%) translate(${labelX}px, ${
+    labelY + offset / 2
+  }px)`;
 
   return (
     <>
       <BaseEdge
-        path={isSelfConnecting ? selfConnectingEdgePath : bezierEdgePath}
+        path={
+          isBiDirectionEdge
+            ? bidirectionalPath
+            : isSelfConnecting
+            ? selfConnectingEdgePath
+            : bezierEdgePath
+        }
         markerEnd={isSelfConnecting ? undefined : markerEnd}
         style={style}
       />
@@ -121,10 +151,11 @@ export function TuringEdge({
         <div
           style={{
             position: "absolute",
-            transform: isSelfConnecting
+            transform: isBiDirectionEdge
+              ? bidirectionTransform
+              : isSelfConnecting
               ? selfConnectingTransform
               : bezierTransform,
-            // if you have an interactive element, set pointer-events: all
             pointerEvents: "all",
           }}
           className="nodrag nopan"

@@ -84,6 +84,29 @@ export function getEdgeParams(source, target) {
   };
 }
 
+export type GetSpecialPathParams = {
+  sourceX: number;
+  sourceY: number;
+  targetX: number;
+  targetY: number;
+};
+
+export const getSpecialPath = (
+  { sourceX, sourceY, targetX, targetY }: GetSpecialPathParams,
+  offset: number
+) => {
+  const centerX = (sourceX + targetX) / 2;
+  const centerY = (sourceY + targetY) / 2;
+  if (offset < 0) {
+    return `M ${sourceX - 64} ${sourceY} Q ${centerX} ${centerY + offset} ${
+      targetX + 64
+    } ${targetY}`;
+  }
+  return `M ${sourceX} ${sourceY} Q ${centerX} ${
+    centerY + offset
+  } ${targetX} ${targetY}`;
+};
+
 export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
   const edgesToNodesRecord: {
     [id: string]: {

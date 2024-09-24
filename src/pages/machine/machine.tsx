@@ -172,6 +172,7 @@ export default function TuringMachine() {
               ...node.data,
               isActive: machine.activeNodeId == node.id,
               activeTool: machine.activeTool,
+              isHovered: machine.hoveredNodeId == node.id,
             },
           }))}
           nodeTypes={nodeTypes}
@@ -186,6 +187,8 @@ export default function TuringMachine() {
           colorMode={colorMode}
           onClick={machine.clickHandler}
           onNodeClick={machine.nodeClickHandler}
+          onNodeMouseEnter={machine.nodeMouseEnterHandler}
+          onNodeMouseLeave={machine.nodeMouseLeaveHandler}
           onEdgeClick={machine.edgeClickHandler}
           nodesConnectable={machine.activeTool == "addEdge"}
         >
