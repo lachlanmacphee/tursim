@@ -12,14 +12,15 @@ export type TuringNode = Node<
     isFinal: boolean;
     isActive: boolean;
     activeTool: string;
+    isHovered: boolean;
   },
   "turing"
 >;
 
 export function TuringNode({ id, data }: NodeProps<TuringNode>) {
   const connection = useConnection();
-  const isAddMoveDeleteTool =
-    data.activeTool == "addMoveNode" || data.activeTool == "delete";
+  const isAddEdgeTool = data.activeTool == "addEdge";
+  const isPotentialForDeletion = data.isHovered && data.activeTool == "delete";
 
   return (
     <div className="customNode">
@@ -30,15 +31,14 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
             : data.isStart
             ? "bg-primary"
             : "bg-secondary"
+        } ${data.isActive && "drop-shadow-glow"} ${
+          isPotentialForDeletion && "opacity-50"
         }`}
-        style={{
-          border: data.isActive ? "4px solid lightpink" : "none",
-        }}
       >
         {!connection.inProgress && (
           <Handle
             className={`w-full h-full ${
-              isAddMoveDeleteTool && "-z-10"
+              !isAddEdgeTool && "-z-10"
             } absolute top-0 left-0 rounded-none transform-none border-none opacity-0`}
             position={Position.Right}
             type="source"
@@ -46,7 +46,7 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
         )}
         <Handle
           className={`w-full h-full ${
-            isAddMoveDeleteTool && "-z-10"
+            !isAddEdgeTool && "-z-10"
           } absolute top-0 left-0 rounded-none transform-none border-none opacity-0`}
           position={Position.Left}
           type="target"

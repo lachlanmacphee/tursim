@@ -86,8 +86,7 @@ export const useMachine = () => {
   );
 
   const nodeClickHandler = useCallback(
-    (event: any, clickedNode: any) => {
-      console.log("Node click detected on node: ", clickedNode.id);
+    (_: any, clickedNode: any) => {
       switch (activeTool) {
         case "delete":
           setNodes(nodes.filter((node) => node.id != clickedNode.id));
@@ -96,6 +95,20 @@ export const useMachine = () => {
               .filter((edge) => edge.source != clickedNode.id)
               .filter((edge) => edge.target != clickedNode.id)
           );
+          break;
+
+        default:
+          break;
+      }
+    },
+    [activeTool, nodes, edges]
+  );
+
+  const edgeClickHandler = useCallback(
+    (_: any, clickedEdge: any) => {
+      switch (activeTool) {
+        case "delete":
+          setEdges(edges.filter((edge) => edge.id != clickedEdge.id));
           break;
 
         default:
@@ -117,6 +130,19 @@ export const useMachine = () => {
     link.remove();
   };
 
+  const updateTapeHeadActive = async (
+    newTape: string[],
+    newTapeHead: number,
+    active: string
+  ) => {
+    return new Promise((resolve) => {
+      setTape(newTape);
+      setTapeHead(newTapeHead);
+      setActiveNodeId(active);
+      setTimeout(resolve, BASE_INTERVAL / (speed / 100));
+    });
+  };
+
   const playTape = async () => {
     const startStates = nodes.filter((node) => node.data.isStart);
 
@@ -127,23 +153,12 @@ export const useMachine = () => {
 
     const edgesToNodesRecord = createEdgesToNodesRecord(edges, nodes);
 
-    let currentNode = startStates[0];
+    let currentNode = activeNodeId
+      ? nodes.find((node) => node.id == activeNodeId)!
+      : startStates[0];
     setActiveNodeId(currentNode.id);
     let tapeIdx = tapeHead;
-    let updatedTape = [...tape]; // Work with a local copy of tape
-
-    const updateTapeHeadActive = async (
-      newTape: string[],
-      newTapeHead: number,
-      active: string
-    ) => {
-      return new Promise((resolve) => {
-        setTape(newTape);
-        setTapeHead(newTapeHead);
-        setActiveNodeId(active);
-        setTimeout(resolve, BASE_INTERVAL / (speed / 100));
-      });
-    };
+    let updatedTape = [...tape];
 
     while (!currentNode.data.isFinal) {
       const tapeLetter = updatedTape[tapeIdx];
@@ -159,7 +174,7 @@ export const useMachine = () => {
 
       // Update the tape symbol if needed
       if (edge.writeLetter) {
-        updatedTape[tapeIdx] = edge.writeLetter; // Modify the local copy of tape
+        updatedTape[tapeIdx] = edge.writeLetter;
       }
 
       // Update tape head based on direction
@@ -170,9 +185,9 @@ export const useMachine = () => {
           );
           return;
         }
-        tapeIdx = tapeIdx - 1; // Update tape index locally
+        tapeIdx = tapeIdx - 1;
       } else if (edge.direction == ">") {
-        tapeIdx = tapeIdx + 1; // Update tape index locally
+        tapeIdx = tapeIdx + 1;
       }
 
       // Await the update of tape and tape head for visual feedback
@@ -275,5 +290,6 @@ export const useMachine = () => {
     changeSpeed,
     clickHandler,
     nodeClickHandler,
+    edgeClickHandler,
   };
 };

@@ -25,10 +25,6 @@ import {
 } from "@/lib/constants";
 import { Separator } from "@/components/ui/separator";
 
-// const tools = {
-//   addMoveNode: {key: "addMoveNode", label:  "Add/Move Node"}
-// }
-
 export default function TuringMachine() {
   const { theme } = useTheme();
   const machine = useMachine();
@@ -190,6 +186,7 @@ export default function TuringMachine() {
           colorMode={colorMode}
           onClick={machine.clickHandler}
           onNodeClick={machine.nodeClickHandler}
+          onEdgeClick={machine.edgeClickHandler}
           nodesConnectable={machine.activeTool == "addEdge"}
         >
           <Background />
