@@ -64,37 +64,6 @@ export default function TuringMachine() {
               <TrashIcon className="w-14 h-14" />
             </ToolButton>
             <Separator className="w-14 mt-2" />
-            <span className="font-extralight text-sm">MACHINE</span>
-            <ToolButton
-              name="saveMachine"
-              tooltip="Save Machine"
-              onClick={machine.saveMachine}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <SaveIcon />
-            </ToolButton>
-            <ToolButton
-              name="loadMachine"
-              tooltip="Load Machine"
-              onClick={machine.loadMachine}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <HardDriveUploadIcon />
-            </ToolButton>
-            <Separator className="w-14 mt-2" />
-            <span className="font-extralight text-sm">TEST</span>
-            <ToolButton
-              name="saveEdgeToNodeDict"
-              tooltip="Download"
-              onClick={machine.saveEdgeToNodeDict}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <DownloadIcon />
-            </ToolButton>
-            <Separator className="w-14 mt-2" />
             <span className="font-extralight text-sm">TAPE</span>
             <ToolButton
               name="playTape"
@@ -140,6 +109,37 @@ export default function TuringMachine() {
               setActiveTool={machine.setActiveTool}
             >
               <HardDriveUploadIcon />
+            </ToolButton>
+            <Separator className="w-14 mt-2" />
+            <span className="font-extralight text-sm">MACHINE</span>
+            <ToolButton
+              name="saveMachine"
+              tooltip="Save Machine"
+              onClick={machine.saveMachine}
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <SaveIcon />
+            </ToolButton>
+            <ToolButton
+              name="loadMachine"
+              tooltip="Load Machine"
+              onClick={machine.loadMachine}
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <HardDriveUploadIcon />
+            </ToolButton>
+            <Separator className="w-14 mt-2" />
+            <span className="font-extralight text-sm">TEST</span>
+            <ToolButton
+              name="saveEdgeToNodeDict"
+              tooltip="Download"
+              onClick={machine.saveEdgeToNodeDict}
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <DownloadIcon />
             </ToolButton>
           </div>
           <ScrollBar orientation="vertical" />
