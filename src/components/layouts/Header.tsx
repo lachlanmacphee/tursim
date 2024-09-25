@@ -1,8 +1,14 @@
 import { NavLink } from "react-router-dom";
 import { appConfig } from "@/config/app";
 import { ModeToggle } from "../mode-toggle";
-import { CassetteTapeIcon, SettingsIcon } from "lucide-react";
-import { Button } from "../ui/button";
+import { CassetteTapeIcon, CoffeeIcon, SettingsIcon } from "lucide-react";
+import { Button, buttonVariants } from "../ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function Header() {
   return (
@@ -39,6 +45,23 @@ export function Header() {
           .
         </p>
         <div className="flex gap-2 items-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href="https://buymeacoffee.com/lachlanmacphee"
+                  target="_blank"
+                  className={buttonVariants({ variant: "ghost", size: "icon" })}
+                >
+                  <CoffeeIcon />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Help support my work</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <Button variant="ghost" size="icon">
             <SettingsIcon />
           </Button>
