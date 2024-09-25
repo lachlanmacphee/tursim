@@ -51,7 +51,7 @@ export function TuringNode({ id, data }: NodeProps<TuringNode>) {
         type="target"
         isConnectableStart={false}
       />
-      <div className="w-16 h-16 flex justify-center items-center">
+      <div className="w-16 h-16 flex justify-center items-center cursor-pointer">
         <span
           className={
             data.isFinal

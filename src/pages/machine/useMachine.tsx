@@ -19,7 +19,7 @@ import { createEdgesToNodesRecord, getId } from "@/lib/utils";
 const BASE_INTERVAL = 500;
 
 export const useMachine = () => {
-  const [activeTool, setActiveTool] = useState<string>("");
+  const [activeTool, setActiveTool] = useState<string>("select");
   const [tape, setTape] = useState<string[]>(new Array(50).fill("_"));
   const [tapeHead, setTapeHead] = useState<number>(0);
   const [activeNodeId, setActiveNodeId] = useState<string>("1");

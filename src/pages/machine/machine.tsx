@@ -3,6 +3,7 @@ import {
   DownloadIcon,
   HardDriveUploadIcon,
   PlayIcon,
+  PointerIcon,
   RotateCcwIcon,
   SaveIcon,
   SplineIcon,
@@ -14,7 +15,7 @@ import "@xyflow/react/dist/style.css";
 import { ToolButton } from "./ToolButton";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { useMachine } from "./useMachine";
 import {
@@ -33,6 +34,33 @@ export default function TuringMachine() {
     [theme]
   );
 
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
+    switch (event.key) {
+      case "a":
+        machine.setActiveTool("select");
+        break;
+      case "s":
+        machine.setActiveTool("addMoveNode");
+        break;
+      case "d":
+        machine.setActiveTool("addEdge");
+        break;
+      case "f":
+        machine.setActiveTool("delete");
+        break;
+      default:
+        break;
+    }
+    console.log(`Key pressed: ${event.key}`);
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
   return (
     <div className="relative h-full">
       <div className="absolute left-4 top-4 h-full z-10 w-20">
@@ -40,8 +68,18 @@ export default function TuringMachine() {
           <div className="flex flex-col items-center gap-2">
             <span className="font-extralight text-sm">DRAW</span>
             <ToolButton
+              name="select"
+              tooltip="Select"
+              keyboardShortcut="a"
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <PointerIcon className="w-14 h-14" />
+            </ToolButton>
+            <ToolButton
               name="addMoveNode"
               tooltip="Add/Move Node"
+              keyboardShortcut="s"
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
@@ -50,6 +88,7 @@ export default function TuringMachine() {
             <ToolButton
               name="addEdge"
               tooltip="Add Edge"
+              keyboardShortcut="d"
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
@@ -58,6 +97,7 @@ export default function TuringMachine() {
             <ToolButton
               name="delete"
               tooltip="Delete"
+              keyboardShortcut="f"
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
