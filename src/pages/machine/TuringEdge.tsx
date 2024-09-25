@@ -138,10 +138,10 @@ export function TuringEdge({
     <>
       <BaseEdge
         path={
-          isBiDirectionEdge
-            ? bidirectionalPath
-            : isSelfConnecting
+          isSelfConnecting
             ? selfConnectingEdgePath
+            : isBiDirectionEdge
+            ? bidirectionalPath
             : bezierEdgePath
         }
         markerEnd={isSelfConnecting ? undefined : markerEnd}
@@ -151,10 +151,10 @@ export function TuringEdge({
         <div
           style={{
             position: "absolute",
-            transform: isBiDirectionEdge
-              ? bidirectionTransform
-              : isSelfConnecting
+            transform: isSelfConnecting
               ? selfConnectingTransform
+              : isBiDirectionEdge
+              ? bidirectionTransform
               : bezierTransform,
             pointerEvents: "all",
           }}
