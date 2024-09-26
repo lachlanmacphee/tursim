@@ -10,12 +10,22 @@ import {
   TrashIcon,
 } from "lucide-react";
 
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+
 import { ReactFlow, Background, Controls } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { ToolButton } from "./ToolButton";
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { useCallback, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { useMachine } from "./useMachine";
 import {
@@ -25,6 +35,9 @@ import {
   nodeTypes,
 } from "@/lib/constants";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { SaveDialog } from "./SaveDialog";
 
 export default function TuringMachine() {
   const { theme } = useTheme();
@@ -34,35 +47,91 @@ export default function TuringMachine() {
     [theme]
   );
 
-  const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    switch (event.key) {
-      case "a":
-        machine.setActiveTool("select");
-        break;
-      case "s":
-        machine.setActiveTool("addMoveNode");
-        break;
-      case "d":
-        machine.setActiveTool("addEdge");
-        break;
-      case "f":
-        machine.setActiveTool("delete");
-        break;
-      default:
-        break;
-    }
-    console.log(`Key pressed: ${event.key}`);
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyPress);
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [handleKeyPress]);
-
   return (
     <div className="relative h-full">
+      {/* Load Machines Drawer */}
+      <Drawer
+        open={machine.showLoadMachinesDrawer}
+        onOpenChange={machine.setShowLoadMachinesDrawer}
+      >
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>Load Machine</DrawerTitle>
+              <DrawerDescription>
+                Choose a machine to load into the canvas.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4 pb-0">
+              <div className="flex items-center justify-center space-x-2">
+                {machine.machines.map((loadedMachine) => (
+                  <Button
+                    onClick={() => {
+                      machine.setNodes(loadedMachine.nodes);
+                      machine.setEdges(loadedMachine.edges);
+                      machine.setShowLoadMachinesDrawer(false);
+                    }}
+                  >
+                    {loadedMachine.id}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
+      {/* Load Tapes Drawer */}
+      <Drawer
+        open={machine.showLoadTapesDrawer}
+        onOpenChange={machine.setShowLoadTapesDrawer}
+      >
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>Load Tape</DrawerTitle>
+              <DrawerDescription>Choose a tape to load.</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4 pb-0">
+              <div className="flex items-center justify-center space-x-2">
+                {machine.tapes.map((loadedTape) => (
+                  <Button
+                    onClick={() => {
+                      machine.setTape(loadedTape.contents);
+                      machine.setShowLoadTapesDrawer(false);
+                    }}
+                  >
+                    {loadedTape.id}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
+      {/* Save Machine Dialog */}
+      <SaveDialog
+        item="Machine"
+        open={machine.showSaveMachineDialog}
+        onOpenChange={machine.setShowSaveMachineDialog}
+        saveHandler={machine.saveMachineHandler}
+      />
+      {/* Save Tape Dialog */}
+      <SaveDialog
+        item="Tape"
+        open={machine.showSaveTapeDialog}
+        onOpenChange={machine.setShowSaveTapeDialog}
+        saveHandler={machine.saveTapeHandler}
+      />
       <div className="absolute left-4 top-4 h-full z-10 w-20">
         <ScrollArea className="h-5/6 border bg-background gap-2 py-3 rounded-lg">
           <div className="flex flex-col items-center gap-2">
@@ -135,7 +204,7 @@ export default function TuringMachine() {
             <ToolButton
               name="saveTape"
               tooltip="Save Tape"
-              onClick={machine.saveTape}
+              onClick={() => machine.setShowSaveTapeDialog(true)}
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
@@ -144,7 +213,7 @@ export default function TuringMachine() {
             <ToolButton
               name="loadTape"
               tooltip="Load Tape"
-              onClick={machine.loadTape}
+              onClick={machine.loadTapes}
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
@@ -155,7 +224,7 @@ export default function TuringMachine() {
             <ToolButton
               name="saveMachine"
               tooltip="Save Machine"
-              onClick={machine.saveMachine}
+              onClick={() => machine.setShowSaveMachineDialog(true)}
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
@@ -164,7 +233,7 @@ export default function TuringMachine() {
             <ToolButton
               name="loadMachine"
               tooltip="Load Machine"
-              onClick={machine.loadMachine}
+              onClick={machine.loadMachines}
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
@@ -198,6 +267,7 @@ export default function TuringMachine() {
                 value={machine.tape[idx]}
                 onChange={(e) => machine.setTapeValue(e, idx)}
                 onClick={machine.handleSymbolClick}
+                onBlur={() => machine.setIsEditingTape(false)}
               />
             ))}
           </div>

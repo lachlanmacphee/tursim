@@ -1,4 +1,19 @@
-import { useState, useCallback, ChangeEvent, MouseEventHandler } from "react";
+import {
+  useState,
+  useCallback,
+  ChangeEvent,
+  MouseEventHandler,
+  useEffect,
+} from "react";
+import {
+  getStoreData,
+  initDB,
+  Machine,
+  saveMachine,
+  saveTape,
+  Stores,
+  Tape,
+} from "@/lib/db";
 
 import {
   applyNodeChanges,
@@ -20,6 +35,7 @@ const BASE_INTERVAL = 500;
 
 export const useMachine = () => {
   const [activeTool, setActiveTool] = useState<string>("select");
+  const [isEditingTape, setIsEditingTape] = useState<boolean>(false);
   const [tape, setTape] = useState<string[]>(new Array(50).fill("_"));
   const [tapeHead, setTapeHead] = useState<number>(0);
   const [activeNodeId, setActiveNodeId] = useState<string>("1");
@@ -27,7 +43,51 @@ export const useMachine = () => {
   const { screenToFlowPosition } = useReactFlow();
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  const [machines, setMachines] = useState<Machine[]>([]);
+  const [showSaveMachineDialog, setShowSaveMachineDialog] =
+    useState<boolean>(false);
+  const [showLoadMachinesDrawer, setShowLoadMachinesDrawer] =
+    useState<boolean>(false);
+  const [tapes, setTapes] = useState<Tape[]>([]);
+  const [showSaveTapeDialog, setShowSaveTapeDialog] = useState<boolean>(false);
+  const [showLoadTapesDrawer, setShowLoadTapesDrawer] =
+    useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(100);
+
+  const handleInitDB = async () => {
+    await initDB();
+  };
+
+  const handleKeyPress = useCallback(
+    (event: KeyboardEvent) => {
+      if (isEditingTape) return;
+      switch (event.key) {
+        case "a":
+          setActiveTool("select");
+          break;
+        case "s":
+          setActiveTool("addMoveNode");
+          break;
+        case "d":
+          setActiveTool("addEdge");
+          break;
+        case "f":
+          setActiveTool("delete");
+          break;
+        default:
+          break;
+      }
+    },
+    [isEditingTape]
+  );
+
+  useEffect(() => {
+    handleInitDB();
+    document.addEventListener("keydown", handleKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [handleKeyPress]);
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -207,6 +267,7 @@ export const useMachine = () => {
   const handleSymbolClick = (event: React.MouseEvent<HTMLInputElement>) => {
     const inputElement = event.target as HTMLInputElement;
     inputElement.select();
+    setIsEditingTape(true);
   };
 
   const setTapeValue = (e: ChangeEvent<HTMLInputElement>, idx: number) => {
@@ -219,18 +280,6 @@ export const useMachine = () => {
     });
   };
 
-  const saveTape = () => {
-    localStorage.setItem("tape", JSON.stringify(tape));
-  };
-
-  const loadTape = () => {
-    const lsTape = localStorage.getItem("tape");
-    if (lsTape) {
-      const parsedTape = JSON.parse(lsTape) as string[];
-      setTape(parsedTape);
-    }
-  };
-
   const resetTape = () => {
     setTapeHead(0);
     const startStates = nodes.filter((node) => node.data.isStart);
@@ -239,20 +288,26 @@ export const useMachine = () => {
     }
   };
 
-  const saveMachine = () => {
-    localStorage.setItem("nodes", JSON.stringify(nodes));
-    localStorage.setItem("edges", JSON.stringify(edges));
+  const saveMachineHandler = (name: string) => {
+    saveMachine(name, nodes, edges);
+    setShowSaveMachineDialog(false);
   };
 
-  const loadMachine = () => {
-    const lsNodes = localStorage.getItem("nodes");
-    const lsEdges = localStorage.getItem("edges");
-    if (lsNodes && lsEdges) {
-      const parsedNodes = JSON.parse(lsNodes) as Node[];
-      const parsedEdges = JSON.parse(lsEdges) as Edge[];
-      setNodes(parsedNodes);
-      setEdges(parsedEdges);
-    }
+  const saveTapeHandler = (name: string) => {
+    saveTape(name, tape);
+    setShowSaveTapeDialog(false);
+  };
+
+  const loadTapes = async () => {
+    const dbTapes = await getStoreData<Tape>(Stores.Tapes);
+    setTapes(dbTapes);
+    setShowLoadTapesDrawer(true);
+  };
+
+  const loadMachines = async () => {
+    const dbMachines = await getStoreData<Machine>(Stores.Machines);
+    setMachines(dbMachines);
+    setShowLoadMachinesDrawer(true);
   };
 
   const changeSpeed = () => {
@@ -287,11 +342,21 @@ export const useMachine = () => {
     handleSymbolClick,
     playTape,
     setTapeValue,
-    saveTape,
-    loadTape,
+    loadMachines,
+    machines,
+    showLoadMachinesDrawer,
+    setShowLoadMachinesDrawer,
+    loadTapes,
+    saveMachineHandler,
     resetTape,
-    saveMachine,
-    loadMachine,
+    tapes,
+    saveTapeHandler,
+    showLoadTapesDrawer,
+    setShowLoadTapesDrawer,
+    showSaveMachineDialog,
+    setShowSaveMachineDialog,
+    showSaveTapeDialog,
+    setShowSaveTapeDialog,
     saveEdgeToNodeDict,
     changeSpeed,
     clickHandler,
@@ -300,5 +365,7 @@ export const useMachine = () => {
     nodeMouseEnterHandler,
     nodeMouseLeaveHandler,
     hoveredNodeId,
+    isEditingTape,
+    setIsEditingTape,
   };
 };

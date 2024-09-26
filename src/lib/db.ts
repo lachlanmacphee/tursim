@@ -88,3 +88,27 @@ export const getStoreData = <T>(storeName: Stores): Promise<T[]> => {
     };
   });
 };
+
+export const saveTape = async (id: string, contents: string[]) => {
+  try {
+    await addData(Stores.Tapes, { id, contents });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error("Something went wrong");
+    }
+  }
+};
+
+export const saveMachine = async (id: string, nodes: Node[], edges: Edge[]) => {
+  try {
+    await addData(Stores.Machines, { id, nodes, edges });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error("Something went wrong");
+    }
+  }
+};
