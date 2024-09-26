@@ -56,7 +56,7 @@ jobs:
         with:
           tagName: tursim-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'tursim v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
+          releaseBody: 'Just another tursim release. See the PR for notes on what has changed. Download the relevant build below to run tursim on your desktop.'
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

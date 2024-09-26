@@ -9,9 +9,8 @@ Follows the Monash University FIT2014 definition of a Turing machine:
 - Blank cells denoted by an `_`
 
 # Roadmap
-- Machine presets
 - Undo / redo
-- Keyboard shortcuts
+- Import from text encoding and create layout automatically
 
 # Implemented Features
 - Infinite canvas that's pannable, zoomable, scrollable, lockable, full-screen-able
@@ -31,3 +30,4 @@ Follows the Monash University FIT2014 definition of a Turing machine:
 - Saving/loading machines
 - Spawn nodes at random points rather than overlaying
 - Multiple connections between a set of two nodes
+- Keyboard shortcuts
