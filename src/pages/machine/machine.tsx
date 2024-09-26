@@ -1,4 +1,5 @@
 import {
+  ALargeSmallIcon,
   CircleIcon,
   DownloadIcon,
   HardDriveUploadIcon,
@@ -36,8 +37,8 @@ import {
 } from "@/lib/constants";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { SaveDialog } from "./SaveDialog";
+import { convertABEncodingToDG } from "@/lib/encodings";
 
 export default function TuringMachine() {
   const { theme } = useTheme();
@@ -240,7 +241,22 @@ export default function TuringMachine() {
               <HardDriveUploadIcon />
             </ToolButton>
             <Separator className="w-14 mt-2" />
-            <span className="font-extralight text-sm">TEST</span>
+            <span className="font-extralight text-sm">MISC</span>
+            <ToolButton
+              name="createMachineFromEncoding"
+              tooltip="TM from Encoding"
+              onClick={() => {
+                const exampleEncoding =
+                  "abaaabaaaababaaabababbaaabaaaabababbaaaabaabbabab";
+                const [nodes, edges] = convertABEncodingToDG(exampleEncoding);
+                machine.setNodes(nodes);
+                machine.setEdges(edges);
+              }}
+              activeTool={machine.activeTool}
+              setActiveTool={machine.setActiveTool}
+            >
+              <ALargeSmallIcon />
+            </ToolButton>
             <ToolButton
               name="saveEdgeToNodeDict"
               tooltip="Download"
