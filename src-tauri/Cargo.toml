@@ -5,7 +5,7 @@ description = "A browser-based fully-interactive Turing Machine simulator"
 authors = ["Lachlan MacPhee"]
 license = "AGPL v3"
 repository = "github.com/lachlanmacphee/tursim"
-default-run = "app"
+default-run = "tursim"
 edition = "2021"
 rust-version = "1.60"
 
