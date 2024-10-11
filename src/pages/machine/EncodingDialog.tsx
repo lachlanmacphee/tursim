@@ -11,45 +11,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
-export function SaveDialog({
-  item,
+export function EncodingDialog({
   open,
   onOpenChange,
-  saveHandler,
+  createHandler,
 }: {
-  item: string;
   open: boolean;
   onOpenChange: any;
-  saveHandler: (name: string) => void;
+  createHandler: (name: string) => void;
 }) {
-  const [name, setName] = useState("");
+  const [encoding, setEncoding] = useState("");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Save {item}</DialogTitle>
+          <DialogTitle>Convert Encoding to TM</DialogTitle>
           <DialogDescription>
-            Enter a name for your {item.toLowerCase()} then hit save.
+            Enter an encoding in the correct format to automatically create an
+            auto-layouted Turing Machine.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
+            <Label htmlFor="encoding" className="text-right">
+              Encoding
             </Label>
             <Input
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              minLength={3}
+              value={encoding}
+              onChange={(e) => setEncoding(e.target.value)}
               className="col-span-3"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => saveHandler(name)} type="submit">
-            Save
+          <Button onClick={() => createHandler(encoding)} type="submit">
+            Create
           </Button>
         </DialogFooter>
       </DialogContent>
