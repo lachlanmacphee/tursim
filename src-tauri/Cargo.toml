@@ -1,12 +1,12 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+name = "tursim"
+version = "0.1.1"
+description = "A browser-based fully-interactive Turing Machine simulator"
+authors = ["Lachlan MacPhee"]
+license = "AGPL v3"
+repository = "github.com/lachlanmacphee/tursim"
 default-run = "app"
-edition = "2021"
+edition = "2024"
 rust-version = "1.60"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
