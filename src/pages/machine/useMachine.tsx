@@ -30,6 +30,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { initialEdges, initialNodes } from "@/lib/constants";
 import { createEdgesToNodesRecord, getId } from "@/lib/utils";
+import { convertABEncodingToDG } from "@/lib/encodings";
 
 const BASE_INTERVAL = 500;
 
@@ -52,6 +53,7 @@ export const useMachine = () => {
   const [showSaveTapeDialog, setShowSaveTapeDialog] = useState<boolean>(false);
   const [showLoadTapesDrawer, setShowLoadTapesDrawer] =
     useState<boolean>(false);
+  const [showEncodingDialog, setShowEncodingDialog] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(100);
 
   const handleInitDB = async () => {
@@ -318,6 +320,13 @@ export const useMachine = () => {
     }
   };
 
+  const createEncoding = (encoding: string) => {
+    const [nodes, edges] = convertABEncodingToDG(encoding);
+    setNodes(nodes);
+    setEdges(edges);
+    setShowEncodingDialog(false);
+  };
+
   return {
     // states
     nodes,
@@ -367,5 +376,8 @@ export const useMachine = () => {
     hoveredNodeId,
     isEditingTape,
     setIsEditingTape,
+    showEncodingDialog,
+    setShowEncodingDialog,
+    createEncoding,
   };
 };

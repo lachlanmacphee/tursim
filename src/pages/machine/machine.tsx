@@ -38,7 +38,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { SaveDialog } from "./SaveDialog";
-import { convertABEncodingToDG } from "@/lib/encodings";
+import { EncodingDialog } from "./EncodingDialog";
 
 export default function TuringMachine() {
   const { theme } = useTheme();
@@ -119,6 +119,11 @@ export default function TuringMachine() {
           </div>
         </DrawerContent>
       </Drawer>
+      <EncodingDialog
+        open={machine.showEncodingDialog}
+        onOpenChange={machine.setShowEncodingDialog}
+        createHandler={machine.createEncoding}
+      />
       {/* Save Machine Dialog */}
       <SaveDialog
         item="Machine"
@@ -245,13 +250,7 @@ export default function TuringMachine() {
             <ToolButton
               name="createMachineFromEncoding"
               tooltip="TM from Encoding"
-              onClick={() => {
-                const exampleEncoding =
-                  "abaaabaaaababaaabababbaaabaaaabababbaaaabaabbabab";
-                const [nodes, edges] = convertABEncodingToDG(exampleEncoding);
-                machine.setNodes(nodes);
-                machine.setEdges(edges);
-              }}
+              onClick={() => machine.setShowEncodingDialog(true)}
               activeTool={machine.activeTool}
               setActiveTool={machine.setActiveTool}
             >
