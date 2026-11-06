@@ -1,13 +1,13 @@
 interface AppConfig {
+  name: string,
+  github: {
+    title: string,
+    url: string
+  },
+  author: {
     name: string,
-    github: {
-        title: string,
-        url: string
-    },
-    author: {
-        name: string,
-        url: string
-    },
+    url: string
+  },
 }
 
 export const appConfig: AppConfig = {
@@ -18,6 +18,6 @@ export const appConfig: AppConfig = {
   },
   author: {
     name: "Lachlan MacPhee",
-    url: "https://github.com/lachlanmacphee/",
+    url: "https://lachlanmacphee.com",
   },
 };

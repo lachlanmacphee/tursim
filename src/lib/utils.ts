@@ -1,111 +1,101 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Edge, Position } from "@xyflow/react";
-import { type Node } from "@xyflow/react";
+import { Edge, type InternalNode, type Node } from "@xyflow/react";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// this helper function returns the intersection point
-// of the line between the center of the intersectionNode and the target node
-function getNodeIntersection(
-  // @ts-ignore
-  intersectionNode,
-  // @ts-ignore
-  targetNode
-) {
-  // https://math.stackexchange.com/questions/1724792/an-algorithm-for-finding-the-intersection-point-between-a-center-of-vision-and-a
-  const { width: intersectionNodeWidth, height: intersectionNodeHeight } =
-    intersectionNode.measured;
-  const intersectionNodePosition = intersectionNode.internals.positionAbsolute;
-  const targetPosition = targetNode.internals.positionAbsolute;
+type Point = { x: number; y: number };
 
-  const w = intersectionNodeWidth / 2;
-  const h = intersectionNodeHeight / 2;
+// A self-loop's label sits this far above the node
+const SELF_LOOP_LABEL_GAP = 44;
+// How far a label is pushed sideways when an edge has one going back the other way
+const BIDIRECTIONAL_OFFSET = 44;
 
-  const x2 = intersectionNodePosition.x + w;
-  const y2 = intersectionNodePosition.y + h;
-  const x1 = targetPosition.x + targetNode.measured.width / 2;
-  const y1 = targetPosition.y + targetNode.measured.height / 2;
+const nodeCenter = (node: InternalNode): Point => ({
+  x: node.internals.positionAbsolute.x + (node.measured.width ?? 0) / 2,
+  y: node.internals.positionAbsolute.y + (node.measured.height ?? 0) / 2,
+});
 
-  const xx1 = (x1 - x2) / (2 * w) - (y1 - y2) / (2 * h);
-  const yy1 = (x1 - x2) / (2 * w) + (y1 - y2) / (2 * h);
-  const a = 1 / (Math.abs(xx1) + Math.abs(yy1));
-  const xx3 = a * xx1;
-  const yy3 = a * yy1;
-  const x = w * (xx3 + yy3) + x2;
-  const y = h * (-xx3 + yy3) + y2;
+const nodeRadius = (node: InternalNode) => (node.measured.width ?? 0) / 2;
 
-  return { x, y };
-}
+const towards = (from: Point, to: Point, distance: number): Point => {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return {
+    x: from.x + (dx / length) * distance,
+    y: from.y + (dy / length) * distance,
+  };
+};
 
-// returns the position (top,right,bottom or right) passed node compared to the intersection point
-function getEdgePosition(
-  node: { internals: { positionAbsolute: any } },
-  intersectionPoint: { x: number; y: number }
-) {
-  const n = { ...node.internals.positionAbsolute, ...node };
-  const nx = Math.round(n.x);
-  const ny = Math.round(n.y);
-  const px = Math.round(intersectionPoint.x);
-  const py = Math.round(intersectionPoint.y);
+export type EdgeGeometry = {
+  // node -> label, then label -> node; the paths run under the label so they
+  // look like they end at its edge
+  pathToLabel: string;
+  pathFromLabel: string;
+  label: Point;
+  // Whether `label` is the label's centre or the middle of its bottom edge
+  labelAnchor: "center" | "bottom";
+};
 
-  if (px <= nx + 1) {
-    return Position.Left;
+export function getEdgeGeometry(
+  sourceNode: InternalNode,
+  targetNode: InternalNode,
+  isBidirectional: boolean
+): EdgeGeometry {
+  const sourceCenter = nodeCenter(sourceNode);
+  const sourceRadius = nodeRadius(sourceNode);
+
+  if (sourceNode.id == targetNode.id) {
+    const r = sourceRadius;
+    const start = { x: sourceCenter.x - r / 2, y: sourceCenter.y - r * 0.866 };
+    const end = { x: sourceCenter.x + r / 2, y: sourceCenter.y - r * 0.866 };
+    const labelBottom = sourceCenter.y - r - SELF_LOOP_LABEL_GAP;
+    const left = { x: sourceCenter.x - 24, y: labelBottom - 8 };
+    const right = { x: sourceCenter.x + 24, y: labelBottom - 8 };
+    const bulgeY = sourceCenter.y - r * 1.5;
+
+    return {
+      pathToLabel: `M ${start.x} ${start.y} Q ${sourceCenter.x - r * 1.4} ${bulgeY} ${left.x} ${left.y}`,
+      pathFromLabel: `M ${right.x} ${right.y} Q ${sourceCenter.x + r * 1.4} ${bulgeY} ${end.x} ${end.y}`,
+      label: { x: sourceCenter.x, y: labelBottom },
+      labelAnchor: "bottom",
+    };
   }
-  if (px >= nx + n.measured.width - 1) {
-    return Position.Right;
-  }
-  if (py <= ny + 1) {
-    return Position.Top;
-  }
-  if (py >= n.y + n.measured.height - 1) {
-    return Position.Bottom;
-  }
 
-  return Position.Top;
-}
+  const targetCenter = nodeCenter(targetNode);
+  const mid = {
+    x: (sourceCenter.x + targetCenter.x) / 2,
+    y: (sourceCenter.y + targetCenter.y) / 2,
+  };
+  const dx = targetCenter.x - sourceCenter.x;
+  const dy = targetCenter.y - sourceCenter.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const offset = isBidirectional ? BIDIRECTIONAL_OFFSET : 0;
+  // Perpendicular to the edge's own direction, so opposite edges split apart
+  const label = {
+    x: mid.x + (-dy / length) * offset,
+    y: mid.y + (dx / length) * offset,
+  };
+  // Control point that makes the curve pass through the label
+  const control = { x: 2 * label.x - mid.x, y: 2 * label.y - mid.y };
 
-// @ts-ignore
-export function getEdgeParams(source, target) {
-  const sourceIntersectionPoint = getNodeIntersection(source, target);
-  const targetIntersectionPoint = getNodeIntersection(target, source);
-
-  const sourcePos = getEdgePosition(source, sourceIntersectionPoint);
-  const targetPos = getEdgePosition(target, targetIntersectionPoint);
+  const start = towards(sourceCenter, control, sourceRadius);
+  const end = towards(targetCenter, control, nodeRadius(targetNode));
+  // Where the curve meets the label, which is where it's split in two
+  const split = {
+    x: (start.x + 2 * control.x + end.x) / 4,
+    y: (start.y + 2 * control.y + end.y) / 4,
+  };
 
   return {
-    sx: sourceIntersectionPoint.x,
-    sy: sourceIntersectionPoint.y,
-    tx: targetIntersectionPoint.x,
-    ty: targetIntersectionPoint.y,
-    sourcePos,
-    targetPos,
+    pathToLabel: `M ${start.x} ${start.y} Q ${(start.x + control.x) / 2} ${(start.y + control.y) / 2} ${split.x} ${split.y}`,
+    pathFromLabel: `M ${split.x} ${split.y} Q ${(control.x + end.x) / 2} ${(control.y + end.y) / 2} ${end.x} ${end.y}`,
+    label,
+    labelAnchor: "center",
   };
 }
-
-export type GetSpecialPathParams = {
-  sourceX: number;
-  sourceY: number;
-  targetX: number;
-  targetY: number;
-};
-
-export const getSpecialPath = (
-  { sourceX, sourceY, targetX, targetY }: GetSpecialPathParams,
-  offset: number
-) => {
-  const centerX = (sourceX + targetX) / 2;
-  const centerY = (sourceY + targetY) / 2;
-  if (offset < 0) {
-    return `M ${sourceX - 64} ${sourceY} Q ${centerX} ${centerY + offset} ${
-      targetX + 64
-    } ${targetY}`;
-  }
-  return `M ${sourceX} ${sourceY} Q ${centerX} ${
-    centerY + offset
-  } ${targetX} ${targetY}`;
-};
 
 export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
   const edgesToNodesRecord: {
@@ -114,6 +104,8 @@ export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
       writeLetter: string | undefined;
       direction: string;
       node: Node;
+      edgeId: string;
+      ruleIndex: number;
     }[];
   } = {};
 
@@ -123,7 +115,7 @@ export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
     const edgeValue = edge!.data!.edgeValue as string;
     const connections = edgeValue.split(";");
 
-    connections.forEach((connection) => {
+    connections.forEach((connection, ruleIndex) => {
       const edgeValueSplit = connection.split(",");
 
       let newReadLetter: string | undefined = undefined;
@@ -159,6 +151,8 @@ export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
             writeLetter: newWriteLetter,
             direction: newDirection,
             node: nodes.filter((node) => node.id == targetId)[0],
+            edgeId: edge.id,
+            ruleIndex,
           },
         ];
       } else {
@@ -168,6 +162,8 @@ export const createEdgesToNodesRecord = (edges: Edge[], nodes: Node[]) => {
             writeLetter: newWriteLetter,
             direction: newDirection,
             node: nodes.filter((node) => node.id == targetId)[0],
+            edgeId: edge.id,
+            ruleIndex,
           },
         ];
       }

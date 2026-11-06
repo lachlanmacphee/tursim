@@ -20,35 +20,54 @@ export function SaveDialog({
   item: string;
   open: boolean;
   onOpenChange: any;
-  saveHandler: (name: string) => void;
+  // Resolves to an error message to show, or null once saved
+  saveHandler: (name: string) => Promise<string | null>;
 }) {
   const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const save = async () => {
+    const problem = await saveHandler(name);
+    if (problem) {
+      setError(problem);
+    } else {
+      setName("");
+      setError("");
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setError("");
+        onOpenChange(isOpen);
+      }}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Save {item}</DialogTitle>
           <DialogDescription>
-            Enter a name for your {item.toLowerCase()} then hit save.
+            Enter a name for your {item.toLowerCase()} and click Save to persist
+            it to your browser's storage. {item}s can be loaded from the
+            corresponding Load button.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              minLength={3}
-              className="col-span-3"
-            />
-          </div>
+        <div className="grid gap-2 py-4">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError("");
+            }}
+            onKeyDown={(e) => e.key == "Enter" && save()}
+          />
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <DialogFooter>
-          <Button onClick={() => saveHandler(name)} type="submit">
+          <Button onClick={save} type="submit">
             Save
           </Button>
         </DialogFooter>

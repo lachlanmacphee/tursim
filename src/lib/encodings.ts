@@ -76,7 +76,7 @@ export function convertABEncodingToDG(
         id: row.from,
         type: "turing",
         data: {
-          isStart: false,
+          isStart: tableRows[0].from == row.from,
           isFinal: tableRows[tableRows.length - 1].to == row.from,
           isActive: false,
         },
@@ -89,7 +89,7 @@ export function convertABEncodingToDG(
         id: row.to,
         type: "turing",
         data: {
-          isStart: false,
+          isStart: tableRows[0].from == row.to,
           isFinal: tableRows[tableRows.length - 1].to == row.to,
           isActive: false,
         },

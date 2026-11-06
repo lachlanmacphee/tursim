@@ -1,36 +1,28 @@
 import {
   ALargeSmallIcon,
-  CircleIcon,
   DownloadIcon,
+  EraserIcon,
   HardDriveUploadIcon,
-  PlayIcon,
-  PointerIcon,
   RotateCcwIcon,
   SaveIcon,
-  SplineIcon,
-  TrashIcon,
+  SettingsIcon,
+  StepBackIcon,
+  StepForwardIcon,
 } from "lucide-react";
 
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 
-import { ReactFlow, Background, Controls } from "@xyflow/react";
+import { ReactFlow, Background, Controls, Viewport } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { ToolButton } from "./ToolButton";
 import { Input } from "@/components/ui/input";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
 import { useMachine } from "./useMachine";
 import {
   edgeTypes,
+  EXAMPLE_MACHINE_NAME,
+  EXAMPLE_TAPE_NAME,
   fitViewOptions,
   defaultEdgeOptions,
   nodeTypes,
@@ -39,86 +31,220 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { SaveDialog } from "./SaveDialog";
 import { EncodingDialog } from "./EncodingDialog";
+import { SettingsDialog } from "./SettingsDialog";
+import { LoadDialog } from "./LoadDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { NODE_DRAG_HANDLE } from "./TuringNode";
+
+// Header + toolbar spacing + the one-column toolbar content, in px
+const SINGLE_COLUMN_MIN_HEIGHT = 1040;
+// The progress ring only appears after this delay, so click-and-drag panning
+// never flashes it; the node is created LONG_PRESS_MS after the ring appears
+const LONG_PRESS_DELAY_MS = 150;
+const LONG_PRESS_MS = 300;
+const COLUMNS_STORAGE_KEY = "tursim:toolbar-two-columns";
+const VIEWPORT_STORAGE_KEY = "tursim:viewport";
+
+const loadSavedViewport = (): Viewport | null => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(VIEWPORT_STORAGE_KEY) ?? "");
+    if (
+      Number.isFinite(saved?.x) &&
+      Number.isFinite(saved?.y) &&
+      Number.isFinite(saved?.zoom)
+    ) {
+      return saved;
+    }
+  } catch {}
+  return null;
+};
+const LONG_PRESS_MOVE_TOLERANCE = 6;
+
+function PlayPauseIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="2 5 12 12 2 19 2 5" />
+      <line x1="17" y1="5" x2="17" y2="19" />
+      <line x1="22" y1="5" x2="22" y2="19" />
+    </svg>
+  );
+}
 
 export default function TuringMachine() {
   const { theme } = useTheme();
   const machine = useMachine();
+  // Reopen where the canvas was left, instead of fitting to the whole machine
+  const [savedViewport] = useState(loadSavedViewport);
+  // Use the saved column state if there is one, otherwise go by screen height
+  const [twoColumns, setTwoColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem(COLUMNS_STORAGE_KEY);
+      if (saved == "true") return true;
+      if (saved == "false") return false;
+    } catch {}
+    return window.innerHeight < SINGLE_COLUMN_MIN_HEIGHT;
+  });
+
+  // Only called from the rail, so the calculated default is never persisted
+  const toggleColumns = () => {
+    const next = !twoColumns;
+    setTwoColumns(next);
+    try {
+      localStorage.setItem(COLUMNS_STORAGE_KEY, String(next));
+    } catch {}
+  };
+  // What the clear confirmation is about. The target is kept after closing so
+  // the dialog's text doesn't change while it fades out.
+  const [clearTarget, setClearTarget] = useState<"tape" | "machine">("tape");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const confirmClear = (target: "tape" | "machine") => {
+    setClearTarget(target);
+    setConfirmOpen(true);
+  };
+  const [press, setPress] = useState<{ x: number; y: number } | null>(null);
+  const pressStart = useRef<{ x: number; y: number } | null>(null);
+  const showTimer = useRef<ReturnType<typeof setTimeout>>();
+  const createTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const cancelPress = () => {
+    clearTimeout(showTimer.current);
+    clearTimeout(createTimer.current);
+    pressStart.current = null;
+    setPress(null);
+  };
+
+  // Holding the empty canvas adds a node there
+  const handleCanvasPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    if (!(e.target as HTMLElement).classList.contains("react-flow__pane"))
+      return;
+    const { clientX, clientY } = e;
+    cancelPress();
+    pressStart.current = { x: clientX, y: clientY };
+    showTimer.current = setTimeout(
+      () => setPress({ x: clientX, y: clientY }),
+      LONG_PRESS_DELAY_MS
+    );
+    createTimer.current = setTimeout(() => {
+      machine.addNodeAt(clientX, clientY);
+      cancelPress();
+    }, LONG_PRESS_DELAY_MS + LONG_PRESS_MS);
+  };
+
+  const handleCanvasPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const start = pressStart.current;
+    if (!start) return;
+    if (
+      Math.hypot(e.clientX - start.x, e.clientY - start.y) >
+      LONG_PRESS_MOVE_TOLERANCE
+    ) {
+      cancelPress();
+    }
+  };
+  // Toolbars scroll without a visible scrollbar or overscroll bounce
+  const scrollClass =
+    "h-full overflow-y-auto overscroll-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  const labelClass = "col-span-full font-extralight text-sm";
+  // In two-column mode a lone button spans both columns
+  const wideClass = twoColumns ? "col-span-full w-full" : "";
+  const separatorClass = `col-span-full mt-2 ${twoColumns ? "w-full" : "w-14"}`;
   const colorMode = useMemo(
     () => (theme == "system" ? "system" : theme == "light" ? "light" : "dark"),
-    [theme]
+    [theme],
   );
 
   return (
-    <div className="relative h-full">
-      {/* Load Machines Drawer */}
-      <Drawer
-        open={machine.showLoadMachinesDrawer}
-        onOpenChange={machine.setShowLoadMachinesDrawer}
+    <div className="flex h-full">
+      <LoadDialog
+        title="Load Machine"
+        description="Choose a machine to load into the canvas, or rename or delete saved machines."
+        emptyMessage="No saved machines yet."
+        items={machine.machines}
+        open={machine.showLoadMachinesDialog}
+        onOpenChange={machine.setShowLoadMachinesDialog}
+        onLoad={(id) => {
+          const loaded = machine.machines.find((m) => m.id == id);
+          if (!loaded) return;
+          // Copies, so editing a loaded example never changes the example itself
+          machine.loadMachine(
+            structuredClone(loaded.nodes),
+            structuredClone(loaded.edges)
+          );
+          machine.setShowLoadMachinesDialog(false);
+        }}
+        onDelete={machine.deleteMachine}
+        onRename={machine.renameMachine}
+        lockedIds={[EXAMPLE_MACHINE_NAME]}
+      />
+      <LoadDialog
+        title="Load Tape"
+        description="Choose a tape to load, or rename or delete saved tapes."
+        emptyMessage="No saved tapes yet."
+        items={machine.tapes}
+        open={machine.showLoadTapesDialog}
+        onOpenChange={machine.setShowLoadTapesDialog}
+        onLoad={(id) => {
+          const loaded = machine.tapes.find((t) => t.id == id);
+          if (!loaded) return;
+          machine.setTape([...loaded.contents]);
+          machine.setShowLoadTapesDialog(false);
+        }}
+        onDelete={machine.deleteTape}
+        onRename={machine.renameTape}
+        lockedIds={[EXAMPLE_TAPE_NAME]}
+      />
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
       >
-        <DrawerContent>
-          <div className="mx-auto w-full max-w-sm">
-            <DrawerHeader>
-              <DrawerTitle>Load Machine</DrawerTitle>
-              <DrawerDescription>
-                Choose a machine to load into the canvas.
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="p-4 pb-0">
-              <div className="flex items-center justify-center space-x-2">
-                {machine.machines.map((loadedMachine) => (
-                  <Button
-                    onClick={() => {
-                      machine.setNodes(loadedMachine.nodes);
-                      machine.setEdges(loadedMachine.edges);
-                      machine.setShowLoadMachinesDrawer(false);
-                    }}
-                  >
-                    {loadedMachine.id}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </div>
-        </DrawerContent>
-      </Drawer>
-      {/* Load Tapes Drawer */}
-      <Drawer
-        open={machine.showLoadTapesDrawer}
-        onOpenChange={machine.setShowLoadTapesDrawer}
-      >
-        <DrawerContent>
-          <div className="mx-auto w-full max-w-sm">
-            <DrawerHeader>
-              <DrawerTitle>Load Tape</DrawerTitle>
-              <DrawerDescription>Choose a tape to load.</DrawerDescription>
-            </DrawerHeader>
-            <div className="p-4 pb-0">
-              <div className="flex items-center justify-center space-x-2">
-                {machine.tapes.map((loadedTape) => (
-                  <Button
-                    onClick={() => {
-                      machine.setTape(loadedTape.contents);
-                      machine.setShowLoadTapesDrawer(false);
-                    }}
-                  >
-                    {loadedTape.id}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </div>
-        </DrawerContent>
-      </Drawer>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear the {clearTarget}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {clearTarget == "machine"
+                ? "This removes every node and edge, leaving just a start and an end node. You can undo it afterwards with Cmd/Ctrl+Z."
+                : "This sets every cell on the tape back to a blank. This can't be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                clearTarget == "machine"
+                  ? machine.clearMachine()
+                  : machine.clearTape()
+              }
+            >
+              Clear {clearTarget}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <SettingsDialog
+        open={machine.showSettingsDialog}
+        onOpenChange={machine.setShowSettingsDialog}
+        speed={machine.speed}
+        setSpeed={machine.setSpeed}
+      />
       <EncodingDialog
         open={machine.showEncodingDialog}
         onOpenChange={machine.setShowEncodingDialog}
@@ -138,81 +264,64 @@ export default function TuringMachine() {
         onOpenChange={machine.setShowSaveTapeDialog}
         saveHandler={machine.saveTapeHandler}
       />
-      <div className="absolute left-4 top-4 h-full z-10 w-20">
-        <ScrollArea className="h-5/6 border bg-background gap-2 py-3 rounded-lg">
-          <div className="flex flex-col items-center gap-2">
-            <span className="font-extralight text-sm">DRAW</span>
-            <ToolButton
-              name="select"
-              tooltip="Select"
-              keyboardShortcut="a"
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <PointerIcon className="w-14 h-14" />
-            </ToolButton>
-            <ToolButton
-              name="addMoveNode"
-              tooltip="Add/Move Node"
-              keyboardShortcut="s"
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <CircleIcon className="w-14 h-14" />
-            </ToolButton>
-            <ToolButton
-              name="addEdge"
-              tooltip="Add Edge"
-              keyboardShortcut="d"
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <SplineIcon className="w-14 h-14" />
-            </ToolButton>
-            <ToolButton
-              name="delete"
-              tooltip="Delete"
-              keyboardShortcut="f"
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <TrashIcon className="w-14 h-14" />
-            </ToolButton>
-            <Separator className="w-14 mt-2" />
-            <span className="font-extralight text-sm">TAPE</span>
+      <div
+        className={`relative z-10 h-full shrink-0 border-r bg-background transition-[width] ${
+          twoColumns ? "w-36" : "w-20"
+        }`}
+      >
+        <div className={scrollClass}>
+          <div
+            className={`grid justify-items-center gap-2 py-3 ${
+              twoColumns
+                ? "grid-cols-[repeat(2,3.5rem)] justify-center"
+                : "grid-cols-1"
+            }`}
+          >
+            <span className={labelClass}>RUN</span>
             <ToolButton
               name="playTape"
-              tooltip="Play Tape"
+              tooltip="Play/Pause"
               onClick={machine.playTape}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
-              <PlayIcon />
-            </ToolButton>
-            <ToolButton
-              name="changeSpeed"
-              tooltip="Change Speed"
-              onClick={machine.changeSpeed}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
-            >
-              <span className="font-light text-sm">{machine.speed}%</span>
+              <PlayPauseIcon />
             </ToolButton>
             <ToolButton
               name="resetTapeHead"
-              tooltip="Reset Tape"
+              tooltip="Restart"
               onClick={machine.resetTape}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <RotateCcwIcon />
             </ToolButton>
             <ToolButton
+              name="stepBack"
+              tooltip="Step Back"
+              onClick={machine.stepBack}
+              disabled={!machine.canStepBack}
+            >
+              <StepBackIcon />
+            </ToolButton>
+            <ToolButton
+              name="stepForward"
+              tooltip="Step Forward"
+              onClick={machine.stepForward}
+              disabled={!machine.canStepForward}
+            >
+              <StepForwardIcon />
+            </ToolButton>
+            <ToolButton
+              name="settings"
+              className={wideClass}
+              tooltip="Settings"
+              onClick={() => machine.setShowSettingsDialog(true)}
+            >
+              <SettingsIcon />
+            </ToolButton>
+            <Separator className={separatorClass} />
+            <span className={labelClass}>TAPE</span>
+            <ToolButton
               name="saveTape"
               tooltip="Save Tape"
               onClick={() => machine.setShowSaveTapeDialog(true)}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <SaveIcon />
             </ToolButton>
@@ -220,19 +329,23 @@ export default function TuringMachine() {
               name="loadTape"
               tooltip="Load Tape"
               onClick={machine.loadTapes}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <HardDriveUploadIcon />
             </ToolButton>
-            <Separator className="w-14 mt-2" />
-            <span className="font-extralight text-sm">MACHINE</span>
+            <ToolButton
+              name="clearTape"
+              className={wideClass}
+              tooltip="Clear Tape"
+              onClick={() => confirmClear("tape")}
+            >
+              <EraserIcon />
+            </ToolButton>
+            <Separator className={separatorClass} />
+            <span className={labelClass}>MACHINE</span>
             <ToolButton
               name="saveMachine"
               tooltip="Save Machine"
               onClick={() => machine.setShowSaveMachineDialog(true)}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <SaveIcon />
             </ToolButton>
@@ -240,19 +353,23 @@ export default function TuringMachine() {
               name="loadMachine"
               tooltip="Load Machine"
               onClick={machine.loadMachines}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <HardDriveUploadIcon />
             </ToolButton>
-            <Separator className="w-14 mt-2" />
-            <span className="font-extralight text-sm">MISC</span>
+            <ToolButton
+              name="clearMachine"
+              className={wideClass}
+              tooltip="Clear Machine"
+              onClick={() => confirmClear("machine")}
+            >
+              <EraserIcon />
+            </ToolButton>
+            <Separator className={separatorClass} />
+            <span className={labelClass}>MISC</span>
             <ToolButton
               name="createMachineFromEncoding"
-              tooltip="TM from Encoding"
+              tooltip="Import from Encoding"
               onClick={() => machine.setShowEncodingDialog(true)}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <ALargeSmallIcon />
             </ToolButton>
@@ -260,24 +377,117 @@ export default function TuringMachine() {
               name="saveEdgeToNodeDict"
               tooltip="Download"
               onClick={machine.saveEdgeToNodeDict}
-              activeTool={machine.activeTool}
-              setActiveTool={machine.setActiveTool}
             >
               <DownloadIcon />
             </ToolButton>
           </div>
-          <ScrollBar orientation="vertical" />
-        </ScrollArea>
+        </div>
+        <button
+          type="button"
+          aria-label={twoColumns ? "Use one column" : "Use two columns"}
+          title={twoColumns ? "Use one column" : "Use two columns"}
+          onClick={toggleColumns}
+          className="group absolute -right-2 top-0 bottom-0 flex w-4 cursor-pointer justify-center"
+        >
+          <span className="h-full w-px bg-transparent transition-colors group-hover:bg-primary" />
+        </button>
       </div>
-      <div className="absolute right-4 top-4 h-full z-10 w-20">
-        <ScrollArea className="h-5/6 border bg-background gap-2 py-3 rounded-lg">
-          <div className="flex flex-col items-center gap-1">
+      <div
+        data-tour="canvas"
+        className="relative h-full min-w-0 flex-1"
+        onPointerDown={handleCanvasPointerDown}
+        onPointerMove={handleCanvasPointerMove}
+        onPointerUp={cancelPress}
+        onPointerCancel={cancelPress}
+        onPointerLeave={cancelPress}
+      >
+        {press && (
+          <div
+            className="pointer-events-none fixed z-20 h-16 w-16 -translate-x-1/2 -translate-y-1/2"
+            style={{ left: press.x, top: press.y }}
+          >
+            <div className="animate-ghost-in absolute inset-2 rounded-full border bg-secondary" />
+            <svg
+              viewBox="0 0 56 56"
+              className="absolute inset-0 h-full w-full -rotate-90"
+            >
+              <circle
+                cx="28"
+                cy="28"
+                r="24"
+                fill="none"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray="150.8"
+                className="animate-ring-fill stroke-primary"
+              />
+            </svg>
+          </div>
+        )}
+        <ReactFlow
+          nodes={machine.nodes.map((node) => ({
+            ...node,
+            dragHandle: NODE_DRAG_HANDLE,
+            data: {
+              ...node.data,
+              isActive: machine.activeNodeId == node.id,
+            },
+          }))}
+          nodeTypes={nodeTypes}
+          edges={machine.edges.map((edge) => ({
+            ...edge,
+            data: {
+              ...edge.data,
+              activeRule:
+                machine.activeTransition?.edgeId == edge.id
+                  ? machine.activeTransition.ruleIndex
+                  : null,
+              ruleApplied:
+                machine.activeTransition?.edgeId == edge.id &&
+                machine.activeTransition.applied,
+            },
+          }))}
+          edgeTypes={edgeTypes}
+          onNodesChange={machine.onNodesChange}
+          onEdgesChange={machine.onEdgesChange}
+          onConnect={machine.onConnect}
+          onNodeDragStart={machine.onNodeDragStart}
+          fitView={!savedViewport}
+          fitViewOptions={fitViewOptions}
+          defaultViewport={savedViewport ?? undefined}
+          onMoveEnd={(_, viewport) => {
+            try {
+              localStorage.setItem(
+                VIEWPORT_STORAGE_KEY,
+                JSON.stringify(viewport)
+              );
+            } catch {}
+          }}
+          defaultEdgeOptions={defaultEdgeOptions}
+          colorMode={colorMode}
+          nodesConnectable
+          // Start and end nodes can't be deleted, so no deleting with the keyboard
+          deleteKeyCode={null}
+        >
+          <Background />
+          <Controls position="bottom-center" orientation="horizontal" />
+        </ReactFlow>
+      </div>
+      <div
+        data-tour="tape"
+        className="h-full w-20 shrink-0 border-l bg-background"
+      >
+        <div className="square-scrollbar h-full overflow-y-auto overscroll-none">
+          <div className="flex flex-col">
             {machine.tape.map((_, idx) => (
               <Input
                 key={idx}
-                className={`h-14 w-14 text-center text-3xl ${
-                  idx == machine.tapeHead && "border-primary border-2"
-                }`}
+                className={cn(
+                  "relative h-14 w-full rounded-none border-x-0 text-center text-3xl focus-visible:z-10",
+                  idx > 0 && "-mt-px",
+                  idx == machine.tapeHead &&
+                    "!shadow-[inset_3px_0_0_0_hsl(var(--primary))]"
+                )}
                 maxLength={1}
                 value={machine.tape[idx]}
                 onChange={(e) => machine.setTapeValue(e, idx)}
@@ -286,40 +496,7 @@ export default function TuringMachine() {
               />
             ))}
           </div>
-          <ScrollBar orientation="vertical" />
-        </ScrollArea>
-      </div>
-      <div className="h-full w-full">
-        <ReactFlow
-          nodes={machine.nodes.map((node) => ({
-            ...node,
-            data: {
-              ...node.data,
-              isActive: machine.activeNodeId == node.id,
-              activeTool: machine.activeTool,
-              isHovered: machine.hoveredNodeId == node.id,
-            },
-          }))}
-          nodeTypes={nodeTypes}
-          edges={machine.edges}
-          edgeTypes={edgeTypes}
-          onNodesChange={machine.onNodesChange}
-          onEdgesChange={machine.onEdgesChange}
-          onConnect={machine.onConnect}
-          fitView
-          fitViewOptions={fitViewOptions}
-          defaultEdgeOptions={defaultEdgeOptions}
-          colorMode={colorMode}
-          onClick={machine.clickHandler}
-          onNodeClick={machine.nodeClickHandler}
-          onNodeMouseEnter={machine.nodeMouseEnterHandler}
-          onNodeMouseLeave={machine.nodeMouseLeaveHandler}
-          onEdgeClick={machine.edgeClickHandler}
-          nodesConnectable={machine.activeTool == "addEdge"}
-        >
-          <Background />
-          <Controls position="bottom-center" orientation="horizontal" />
-        </ReactFlow>
+        </div>
       </div>
     </div>
   );

@@ -112,3 +112,67 @@ export const saveMachine = async (id: string, nodes: Node[], edges: Edge[]) => {
     }
   }
 };
+
+export const deleteData = (storeName: Stores, id: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const openRequest = indexedDB.open(DB_NAME);
+
+    openRequest.onsuccess = () => {
+      const tx = openRequest.result.transaction(storeName, "readwrite");
+      tx.objectStore(storeName).delete(id);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    };
+
+    openRequest.onerror = () => resolve(false);
+  });
+};
+
+// Resolves false if the item is missing or the new name is already taken
+export const renameData = (
+  storeName: Stores,
+  oldId: string,
+  newId: string
+): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const openRequest = indexedDB.open(DB_NAME);
+
+    openRequest.onsuccess = () => {
+      const tx = openRequest.result.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      let renamed = false;
+
+      const existing = store.get(newId);
+      existing.onsuccess = () => {
+        if (existing.result) return;
+        const current = store.get(oldId);
+        current.onsuccess = () => {
+          if (!current.result) return;
+          store.add({ ...current.result, id: newId });
+          store.delete(oldId);
+          renamed = true;
+        };
+      };
+
+      tx.oncomplete = () => resolve(renamed);
+      tx.onerror = () => resolve(false);
+    };
+
+    openRequest.onerror = () => resolve(false);
+  });
+};
+
+export const nameExists = (storeName: Stores, id: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const openRequest = indexedDB.open(DB_NAME);
+
+    openRequest.onsuccess = () => {
+      const tx = openRequest.result.transaction(storeName, "readonly");
+      const found = tx.objectStore(storeName).count(id);
+      found.onsuccess = () => resolve(found.result > 0);
+      found.onerror = () => resolve(false);
+    };
+
+    openRequest.onerror = () => resolve(false);
+  });
+};

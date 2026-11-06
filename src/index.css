@@ -63,3 +63,64 @@
     @apply bg-background text-foreground;
   }
 }
+@keyframes node-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: 150.8;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ghost-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+
+.animate-node-in {
+  animation: node-in 0.25s ease-out;
+}
+
+.animate-ring-fill {
+  animation: ring-fill 0.3s linear forwards;
+}
+
+.animate-ghost-in {
+  animation: ghost-in 0.3s ease-out forwards;
+}
+
+/* Square scrollbar that sits beside the content rather than over it */
+.square-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.square-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+  border-left: 1px solid hsl(var(--border));
+}
+
+.square-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.4);
+  border-radius: 0;
+}
+
+.square-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.7);
+}
